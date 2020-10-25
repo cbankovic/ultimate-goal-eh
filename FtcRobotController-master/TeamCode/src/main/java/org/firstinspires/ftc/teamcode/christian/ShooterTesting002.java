@@ -79,9 +79,9 @@ public class ShooterTesting002 extends OpMode {
         }
 
         if (button_a) {
-            IntakeIn();
+            OuttakeOn();
         } else {
-            IntakeStop();
+            OuttakeStop();
         }
 
         telemetry.addData("Power", OuttakeFrontPower * 100 + "%");
@@ -90,13 +90,13 @@ public class ShooterTesting002 extends OpMode {
     }
 
     /** Functions **/
-    public void IntakeIn() {
+    public void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
         OuttakeBack.setPower(OuttakeBackPower);
         telemetry.addData("Outtake", "ON");
     }
 
-    public void IntakeStop() {
+    public void OuttakeStop() {
         OuttakeFront.setPower(0);
         OuttakeBack.setPower(0);
         telemetry.addData("Outtake", "OFF");
