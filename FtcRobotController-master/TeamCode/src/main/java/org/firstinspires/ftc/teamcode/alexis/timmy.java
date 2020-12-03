@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.alexis;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
@@ -13,6 +14,7 @@ public class timmy extends OpMode {
     private DcMotor motorFrontRight;
     private DcMotor motorBackLeft;
     private DcMotor motorBackRight;
+    private CRServo servo;
 
 
     @Override
@@ -46,16 +48,27 @@ public class timmy extends OpMode {
         motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+//        servo = hardwareMap.crservo.get("ServoCont");
+        servo = hardwareMap.get(CRServo.class, "ServoCont");
+
     }
 
     @Override
     public void loop() {
+
+        boolean ButtonA = gamepad1.a;
 
         try {
             ProMotorControl(gamepad1.right_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
             telemetry.addData("Left_x", gamepad1.left_stick_x);
             telemetry.addData("Right_x", gamepad1.right_stick_x);
             telemetry.addData("Right_y", -gamepad1.right_stick_y);
+
+            if (ButtonA) {
+                servo.setPower(1);
+            } else {
+                servo.setPower(0);
+            }
 
         } catch (Exception ex){
             // Catching the exception
