@@ -257,7 +257,10 @@ public class Auto01 extends LinearOpMode {
 
     private void IntakeStart() {}
 
-    private void CollectRing() {}
+    private void CollectRing() {
+        // Start Intake
+        // Stop Intake
+    }
 
     private void LiftWobble() {}
 
