@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.alexis;
 
+import android.widget.Button;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -15,6 +17,10 @@ public class timmy extends OpMode {
     private DcMotor motorBackLeft;
     private DcMotor motorBackRight;
     private CRServo servo;
+
+    private double MotorPower = 0.2;
+    private int k = 0;
+    private int j = 0;
 
 
     @Override
@@ -57,6 +63,8 @@ public class timmy extends OpMode {
     public void loop() {
 
         boolean ButtonA = gamepad1.a;
+        boolean ButtonB = gamepad1.b;
+        boolean ButtonY = gamepad1.y;
 
         try {
             ProMotorControl(gamepad1.right_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
@@ -69,6 +77,48 @@ public class timmy extends OpMode {
             } else {
                 servo.setPower(0);
             }
+
+            if (ButtonB) {
+                motorBackLeft.setPower(MotorPower);
+            } else {
+                motorBackLeft.setPower(0);
+            }
+
+            if (ButtonY) {
+                if (k < 1 && j == 0) {          // 20% power
+                    MotorPower = 0.2;
+                    j++;
+                } else if (k < 1 && j == 1) {   // 30% power
+                    MotorPower = 0.3;
+                    j++;
+                } else if (k < 1 && j == 2) {   // 40% power
+                    MotorPower = 0.4;
+                    j++;
+                } else if (k < 1 && j == 3) {   // 50% power
+                    MotorPower = 0.5;
+                    j++;
+                } else if (k < 1 && j == 4) {   // 60% power
+                    MotorPower = 0.6;
+                    j++;
+                } else if (k < 1 && j == 5) {   // 70% power
+                    MotorPower = 0.7;
+                    j++;
+                } else if (k < 1 && j == 6) {   // 80% power
+                    MotorPower = 0.8;
+                    j++;
+                } else if (k < 1 && j == 7) {   // 90% power
+                    MotorPower = 0.9;
+                    j++;
+                } else if (k < 1 && j == 8) {   // 100% power
+                    MotorPower = 1;
+                    j = 0;
+                }
+                k++;
+            } else {
+                k = 0;
+            }
+
+            telemetry.addData("Power", MotorPower * 100 + "%");
 
         } catch (Exception ex){
             // Catching the exception

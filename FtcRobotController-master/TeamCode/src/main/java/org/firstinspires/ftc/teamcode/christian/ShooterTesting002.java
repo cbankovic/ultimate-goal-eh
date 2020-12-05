@@ -57,7 +57,7 @@ public class ShooterTesting002 extends OpMode {
             } else if (k < 1 && j == 3) {   // 50% power
                 OuttakeFrontPower = 0.5;
                 j++;
-            } else if (k < 1 && j == 4) {   // 6-% power
+            } else if (k < 1 && j == 4) {   // 60% power
                 OuttakeFrontPower = 0.6;
                 j++;
             } else if (k < 1 && j == 5) {   // 70% power
