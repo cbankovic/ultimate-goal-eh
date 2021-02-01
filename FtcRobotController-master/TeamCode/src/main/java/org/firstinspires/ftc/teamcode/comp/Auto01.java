@@ -105,10 +105,27 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
-                // Do stuff
-//                telemetry.addData("Something", "=^D");
-//                GetGyroInfo();
+                // Drive to the ring stack
+                ForwardUntilAtTargetPosition(25);
+                // Detect the ring stack
+
+                // Drive to target zone A
+                rotate(-90, 0.5);
                 ForwardUntilAtTargetPosition(24);
+                rotate(90, 0.5);
+                ForwardUntilAtTargetPosition(27.75);
+                // Drop the wobble goal
+
+                // Drive to the launch line
+                ForwardUntilAtTargetPosition(9);
+                // Drive to the power shots
+                rotate(90, 0.5);
+                ForwardUntilAtTargetPosition(40);
+                rotate(-90, 0.5);
+                // Shoot
+
+                // Park on the launch line
+                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
@@ -290,14 +307,14 @@ public class Auto01 extends LinearOpMode {
     private void IdentifyRingNumber() {} // TODO: make int
 
     private void DriveStraightForwards() {
-//        correction = pidDrive.performPID(getAngle());
+        correction = pidDrive.performPID(getAngle());
 
-//        if (power - correction <= 0.2) {
-//            power += correction;
-//        }
+        if (power - correction <= 0.2) {
+            power += correction;
+        }
 
-        //telemetry.addData("LT", "Power Sub    : " + (power - correction));
-        //telemetry.addData("LT", "Power Add    : " + (power + correction));
+        telemetry.addData("LT", "Power Sub    : " + (power - correction));
+        telemetry.addData("LT", "Power Add    : " + (power + correction));
 
         WheelFrontLeft.setPower(power - correction);
         WheelFrontRight.setPower(power + correction);
@@ -324,11 +341,11 @@ public class Auto01 extends LinearOpMode {
     private void ForwardUntilAtTargetPosition(double distanceInch) {
 
         // TODO: uncomment MAX_POWER
-        power = 0; //MAX_POWER;
+        power = MAX_POWER;
 
         SetPIDForward();
 
-//        DriveStraightForwards();
+        DriveStraightForwards();
 
         // Get Current position in ticks
         leftCurrentPosition = GetLeftPosition();
@@ -367,7 +384,7 @@ public class Auto01 extends LinearOpMode {
             //LoadTelemetryData();
             telemetry.update();
         }
-//        BasicMotorControl(0.0);
+        BasicMotorControl(0.0);
 
     }
 
