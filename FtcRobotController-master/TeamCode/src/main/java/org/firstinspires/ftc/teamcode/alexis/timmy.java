@@ -78,11 +78,11 @@ public class timmy extends OpMode {
                 servo.setPower(0);
             }
 
-            if (ButtonB) {
-                motorBackLeft.setPower(MotorPower);
-            } else {
-                motorBackLeft.setPower(0);
-            }
+//            if (ButtonB) {
+//                motorBackLeft.setPower(MotorPower);
+//            } else {
+////                motorBackLeft.setPower(0);
+//            }
 
             if (ButtonY) {
                 if (k < 1 && j == 0) {          // 20% power

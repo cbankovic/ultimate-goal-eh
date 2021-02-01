@@ -46,6 +46,8 @@ public class Auto01 extends LinearOpMode {
 
     private int leftCurrentPosition = 0;
     private double leftTargetPosition = 0;
+    private int rightCurrentPosition = 0;
+    private double rightTargetPosition = 0;
 
     private final double COUNTS_PER_INCH = 290; //307.699557;
 
@@ -104,6 +106,9 @@ public class Auto01 extends LinearOpMode {
                 }
 
                 // Do stuff
+//                telemetry.addData("Something", "=^D");
+//                GetGyroInfo();
+                ForwardUntilAtTargetPosition(24);
 
             } catch (Exception ex) {
 
@@ -112,6 +117,7 @@ public class Auto01 extends LinearOpMode {
             } finally {
 
                 telemetry.update();
+//                waitForOtherThing();
             }
             break;
         }
@@ -123,6 +129,15 @@ public class Auto01 extends LinearOpMode {
      *** METHODS ***
      ***************/
 
+
+    private void waitForOtherThing() {
+        while (opModeIsActive()) {
+            GetGyroInfo();
+            if (!opModeIsActive()) {
+                break;
+            }
+        }
+    }
 
     private void SetPIDForward() {
 
@@ -174,12 +189,12 @@ public class Auto01 extends LinearOpMode {
         WheelBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize Shooter
-        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
-        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        OuttakeFront.setPower(0);
-        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
+//        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
+//        OuttakeFront.setPower(0);
+//        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 //        OuttakeBack = hardwareMap.dcMotor.get("Back Outtake");
 //        OuttakeBack.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -190,12 +205,16 @@ public class Auto01 extends LinearOpMode {
 
         // Initialize Encoders
         odometerLeft = hardwareMap.dcMotor.get("Front Left");
+        odometerRight = hardwareMap.dcMotor.get("Front Right");
 
         odometerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odometerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         odometerLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        odometerRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         leftCurrentPosition = odometerLeft.getCurrentPosition();
+        rightCurrentPosition = odometerRight.getCurrentPosition();
 
 //        // Initialize Servos
 //        ServoLeft = hardwareMap.get(Servo.class, "LeftHook");
@@ -271,14 +290,14 @@ public class Auto01 extends LinearOpMode {
     private void IdentifyRingNumber() {} // TODO: make int
 
     private void DriveStraightForwards() {
-        correction = pidDrive.performPID(getAngle());
+//        correction = pidDrive.performPID(getAngle());
 
-        if (power - correction <= 0.2) {
-            power += correction;
-        }
+//        if (power - correction <= 0.2) {
+//            power += correction;
+//        }
 
-        telemetry.addData("LT", "Power Sub    : " + (power - correction));
-        telemetry.addData("LT", "Power Add    : " + (power + correction));
+        //telemetry.addData("LT", "Power Sub    : " + (power - correction));
+        //telemetry.addData("LT", "Power Add    : " + (power + correction));
 
         WheelFrontLeft.setPower(power - correction);
         WheelFrontRight.setPower(power + correction);
@@ -304,11 +323,12 @@ public class Auto01 extends LinearOpMode {
 
     private void ForwardUntilAtTargetPosition(double distanceInch) {
 
-        power = MAX_POWER;
+        // TODO: uncomment MAX_POWER
+        power = 0; //MAX_POWER;
 
         SetPIDForward();
 
-        DriveStraightForwards();
+//        DriveStraightForwards();
 
         // Get Current position in ticks
         leftCurrentPosition = GetLeftPosition();
@@ -330,25 +350,33 @@ public class Auto01 extends LinearOpMode {
 
             DriveStraightForwards();
 
-            telemetry.addData("LT", "Left Target  : " + leftTargetPosition);
-            telemetry.addData("LT", "Left Current : " + leftCurrentPosition);
+            telemetry.addData("BL", "Back Left: " + GetLeftPosition());
+            telemetry.addData("BR", "Back Right: " + GetRightPosition());
+            //telemetry.addData("CL", "Current Left", +leftCurrentPosition);
+            //telemetry.addData("CR", "Current Right", +rightCurrentPosition);
+            //telemetry.addData("TL", "Target Left", +leftTargetPosition);
+            //telemetry.addData("TR", "Target Right", +rightTargetPosition);
             telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
             telemetry.addData("1 imu heading", lastAngles.firstAngle);
             telemetry.addData("2 global heading", globalAngle);
             telemetry.addData("correction", correction);
-            telemetry.addData("getP", pidDrive.getP());
-            telemetry.addData("getI", pidDrive.getI());
-            telemetry.addData("getD", pidDrive.getD());
-            telemetry.addData("getError", pidDrive.getError());
+            //telemetry.addData("getP", pidDrive.getP());
+            //telemetry.addData("getI", pidDrive.getI());
+            ////telemetry.addData("getD", pidDrive.getD());
+            //telemetry.addData("getError", pidDrive.getError());
             //LoadTelemetryData();
             telemetry.update();
         }
-        BasicMotorControl(0.0);
+//        BasicMotorControl(0.0);
 
     }
 
     private int GetLeftPosition() {
-        return odometerLeft.getCurrentPosition() * -1;
+        return odometerLeft.getCurrentPosition();// * -1;
+    }
+
+    private int GetRightPosition() {
+        return odometerRight.getCurrentPosition();
     }
 
     private void BackwardUntilAtTargetPosition(double distanceInch) {

@@ -21,10 +21,16 @@ public class TeleOp01 extends OpMode {
     // Shooter Motors
     private DcMotor OuttakeFront;
     private Servo OuttakeBack;
-    private double OuttakeFrontPower = 0.2;
+    private double OuttakeFrontPower = 0.6;
     private double OuttakeBackPower = 1;
     private int k = 0;
     private int j = 0;
+
+    // Wobbly boi
+    private DcMotor FrontArm;
+
+    // Intake
+    private DcMotor Intake;
 
 
     @Override
@@ -59,84 +65,123 @@ public class TeleOp01 extends OpMode {
         WheelBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WheelBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
+//        // Shooter Initialization
+//        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
+//        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
+//        OuttakeFront.setPower(0);
+//        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
 
-        // Shooter Initialization
-        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
-        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
-        OuttakeFront.setPower(0);
-        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
+//        // TODO: Need to finialize the servo type for the config
+//        // Servo that pushes the ring into the shooter wheel aka OuttakeFront
+//        OuttakeBack = hardwareMap.servo.get("Back Outtake");
+//        OuttakeBack.setDirection(Servo.Direction.FORWARD);
+//        OuttakeBack.setPosition(0);
 
-//        OuttakeBack = hardwareMap.dcMotor.get("Back Outtake");
-//        OuttakeBack.setDirection(DcMotorSimple.Direction.FORWARD);
-//        OuttakeBack.setPower(0);
-//        OuttakeBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        OuttakeBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        OuttakeBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+//        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
+//        FrontArm = hardwareMap.dcMotor.get("Front Arm");
+//        FrontArm.setDirection(DcMotorSimple.Direction.FORWARD);
+//        FrontArm.setPower(0);
+//        FrontArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        FrontArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        FrontArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+//        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
+//        Intake = hardwareMap.dcMotor.get("Intake");
+//        Intake.setDirection(DcMotorSimple.Direction.FORWARD);
+//        Intake.setPower(0);
+//        Intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        Intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        Intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
     }
 
     @Override
     public void loop() {
 
-        // Drive controls
-        float right_stick_y = gamepad1.right_stick_y;
-        float right_stick_x = gamepad1.right_stick_x;
-        float left_stick_x  = gamepad1.left_stick_x;
+        // Gamepad 1 Drive controls
+        float one_right_stick_y = gamepad1.right_stick_y;
+        float one_right_stick_x = gamepad1.right_stick_x;
+        float one_left_stick_x  = gamepad1.left_stick_x;
+
 
         // Buttons
-        boolean button_a = gamepad1.a;
-        boolean button_b = gamepad1.b;
+        boolean one_button_a = gamepad1.a;
+        boolean one_button_b = gamepad1.b;
+
+
+        // Gamepad 2 Drive controls
+        float two_right_stick_y = gamepad2.right_stick_y;
+        float two_right_stick_x = gamepad2.right_stick_x;
+        float two_left_stick_x  = gamepad2.left_stick_x;
+        // Buttons
+        boolean two_button_a = gamepad2.a;
+        boolean two_button_b = gamepad2.b;
+
+        // Bumpers
+        boolean two_bumper_right = gamepad2.right_bumper;
 
         try {
             // Drive Code
-            ProMotorControl(right_stick_y, -right_stick_x, -left_stick_x);
-            telemetry.addData("Left_ x: ", left_stick_x);
-            telemetry.addData("Right_x: ", right_stick_x);
-            telemetry.addData("Right_y: ", -right_stick_y);
+            ProMotorControl(one_right_stick_y, -one_right_stick_x, -one_left_stick_x);
+            telemetry.addData("Left_ x: ", one_left_stick_x);
+            telemetry.addData("Right_x: ", one_right_stick_x);
+            telemetry.addData("Right_y: ", -one_right_stick_y);
 
-            // Outtake Power Adjustment
-            if (button_b) {
-                if (k < 1 && j == 0) {          // 20% power
-                    OuttakeFrontPower = 0.2;
-                    j++;
-                } else if (k < 1 && j == 1) {   // 30% power
-                    OuttakeFrontPower = 0.3;
-                    j++;
-                } else if (k < 1 && j == 2) {   // 40% power
-                    OuttakeFrontPower = 0.4;
-                    j++;
-                } else if (k < 1 && j == 3) {   // 50% power
-                    OuttakeFrontPower = 0.5;
-                    j++;
-                } else if (k < 1 && j == 4) {   // 60% power
-                    OuttakeFrontPower = 0.6;
-                    j++;
-                } else if (k < 1 && j == 5) {   // 70% power
-                    OuttakeFrontPower = 0.7;
-                    j++;
-                } else if (k < 1 && j == 6) {   // 80% power
-                    OuttakeFrontPower = 0.8;
-                    j++;
-                } else if (k < 1 && j == 7) {   // 90% power
-                    OuttakeFrontPower = 0.9;
-                    j++;
-                } else if (k < 1 && j == 8) {   // 100% power
-                    OuttakeFrontPower = 1;
-                    j = 0;
-                }
-                k++;
-            } else {
-                k = 0;
-            }
+//            // Outtake Power Adjustment
+//            if (button_b) {
+//                if (k < 1 && j == 0) {          // 20% power
+//                    OuttakeFrontPower = 0.2;
+//                    j++;
+//                } else if (k < 1 && j == 1) {   // 30% power
+//                    OuttakeFrontPower = 0.3;
+//                    j++;
+//                } else if (k < 1 && j == 2) {   // 40% power
+//                    OuttakeFrontPower = 0.4;
+//                    j++;
+//                } else if (k < 1 && j == 3) {   // 50% power
+//                    OuttakeFrontPower = 0.5;
+//                    j++;
+//                } else if (k < 1 && j == 4) {   // 60% power
+//                    OuttakeFrontPower = 0.6;
+//                    j++;
+//                } else if (k < 1 && j == 5) {   // 70% power
+//                    OuttakeFrontPower = 0.7;
+//                    j++;
+//                } else if (k < 1 && j == 6) {   // 80% power
+//                    OuttakeFrontPower = 0.8;
+//                    j++;
+//                } else if (k < 1 && j == 7) {   // 90% power
+//                    OuttakeFrontPower = 0.9;
+//                    j++;
+//                } else if (k < 1 && j == 8) {   // 100% power
+//                    OuttakeFrontPower = 1;
+//                    j = 0;
+//                }
+//                k++;
+//            } else {
+//                k = 0;
+//            }
 
             // Outtake Code
-            if (button_a) {
+
+            if (two_button_a) {
                 OuttakeOn();
             } else {
                 OuttakeStop();
             }
+
+            if (two_bumper_right) {
+                PushRing();
+            } else {
+                ResetPusher();
+            }
+
+            // Wobbly Boi Code
+
+            MoveWobblyBoi(two_right_stick_y);
 
         } catch (Exception ex){
             // Catching the exception
@@ -174,21 +219,33 @@ public class TeleOp01 extends OpMode {
     }
 
     // TODO: Code these functions
-    public void OuttakeOn() {
+    private void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
         // TODO: push the ring into the shooter
         telemetry.addData("Outtake", "ON");
     }
 
-    public void OuttakeStop() {
+    private void OuttakeStop() {
         OuttakeFront.setPower(0);
         // TODO: move the pusher out of the shooter
         telemetry.addData("Outtake", "OFF");
     }
 
+    private void PushRing() {
+        OuttakeBack.setPosition(1);
+    }
+
+    private void ResetPusher() {
+        OuttakeBack.setPosition(0);
+    }
+
     private void IntakeStop() {}
 
     private void IntakeStart() {}
+
+    private void MoveWobblyBoi(float right_stick_y) {
+        FrontArm.setPower(right_stick_y);
+    }
 
     private void LiftWobble() {}
 
