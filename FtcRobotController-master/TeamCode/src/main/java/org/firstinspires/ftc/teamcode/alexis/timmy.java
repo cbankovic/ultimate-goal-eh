@@ -17,6 +17,7 @@ public class timmy extends OpMode {
     private DcMotor motorBackLeft;
     private DcMotor motorBackRight;
     private CRServo servo;
+    private DcMotor motorExtra;
 
     private double MotorPower = 0.2;
     private int k = 0;
@@ -54,6 +55,13 @@ public class timmy extends OpMode {
         motorBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        motorExtra = hardwareMap.dcMotor.get("Extra Motor");
+        motorExtra.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorExtra.setPower(0);
+        motorExtra.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorExtra.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        motorExtra.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
 //        servo = hardwareMap.crservo.get("ServoCont");
         servo = hardwareMap.get(CRServo.class, "ServoCont");
 
@@ -65,6 +73,7 @@ public class timmy extends OpMode {
         boolean ButtonA = gamepad1.a;
         boolean ButtonB = gamepad1.b;
         boolean ButtonY = gamepad1.y;
+        boolean ButtonX = gamepad1.x;
 
         try {
             ProMotorControl(gamepad1.right_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x);
@@ -76,6 +85,15 @@ public class timmy extends OpMode {
                 servo.setPower(1);
             } else {
                 servo.setPower(0);
+            }
+
+
+            if (ButtonX) {
+                motorExtra.setPower(1);
+                telemetry.addData("X:", "On >:D");
+            } else  {
+                motorExtra.setPower(0);
+                telemetry.addData("X:", "Off >:(");
             }
 
 //            if (ButtonB) {
