@@ -32,6 +32,8 @@ public class Auto01 extends LinearOpMode {
     private DcMotor WheelFrontRight;
     private DcMotor WheelBackLeft;
     private DcMotor WheelBackRight;
+    //wobbly boi motor
+    private DcMotor WobbleGrabber;
 
     // Shooter Motors
     private DcMotor OuttakeFront;
@@ -106,26 +108,26 @@ public class Auto01 extends LinearOpMode {
                 }
 
                 // Drive to the ring stack
-                ForwardUntilAtTargetPosition(25);
+//                ForwardUntilAtTargetPosition(25);
                 // Detect the ring stack
-
+                // TODO: Add vision code
                 // Drive to target zone A
-                rotate(-90, 0.5);
-                ForwardUntilAtTargetPosition(24);
-                rotate(90, 0.5);
-                ForwardUntilAtTargetPosition(27.75);
+//                rotate(-90, 0.5);
+//                ForwardUntilAtTargetPosition(24);
+//                rotate(90, 0.5);
+//                ForwardUntilAtTargetPosition(27.75);
                 // Drop the wobble goal
 
                 // Drive to the launch line
-                ForwardUntilAtTargetPosition(9);
+//                ForwardUntilAtTargetPosition(9);
                 // Drive to the power shots
-                rotate(90, 0.5);
-                ForwardUntilAtTargetPosition(40);
-                rotate(-90, 0.5);
+//                rotate(90, 0.5);
+//                ForwardUntilAtTargetPosition(40);
+//                rotate(-90, 0.5);
                 // Shoot
-
+                ShootRing();
                 // Park on the launch line
-                ForwardUntilAtTargetPosition(5.5);
+//                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
@@ -206,19 +208,25 @@ public class Auto01 extends LinearOpMode {
         WheelBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize Shooter
-//        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
-//        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
-//        OuttakeFront.setPower(0);
-//        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
+        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        OuttakeFront.setPower(0);
+        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        OuttakeBack = hardwareMap.dcMotor.get("Back Outtake");
-//        OuttakeBack.setDirection(DcMotorSimple.Direction.FORWARD);
-//        OuttakeBack.setPower(0);
-//        OuttakeBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        OuttakeBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        OuttakeBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        OuttakeBack = hardwareMap.get(Servo.class, "Back Outtake");
+        OuttakeBack.setPosition(0);
+
+
+        //initialize wobbly boi
+//        WobbleGrabber
+        WobbleGrabber = hardwareMap.dcMotor.get("Wobble Grabber");
+        WobbleGrabber.setDirection(DcMotorSimple.Direction.FORWARD);
+        WobbleGrabber.setPower(0);
+        WobbleGrabber.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        WobbleGrabber.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        WobbleGrabber.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Initialize Encoders
         odometerLeft = hardwareMap.dcMotor.get("Front Left");
@@ -274,19 +282,41 @@ public class Auto01 extends LinearOpMode {
     // TODO: Code These Functions
     public void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
-        // TODO: push the ring into the shooter
         telemetry.addData("Outtake", "ON");
+    }
+    public void PushRing(){
+        OuttakeBack.setPosition(1);
+    }
+    public void PushReset(){
+        OuttakeBack.setPosition(0);
     }
 
     public void OuttakeStop() {
         OuttakeFront.setPower(0);
-        // TODO: move the pusher out of the shooter
         telemetry.addData("Outtake", "OFF");
     }
 
     private void ShootRing() {
         // Start Shooter
+        OuttakeOn();
+        waitForTime(5000, "Charging Shooter...");
+        PushRing();
+        waitForTime(1000, "Shooting Ring");
         // Stop Shooter
+        PushReset();
+        waitForTime(1000, "Resetting Shooter");
+        OuttakeStop();
+    }
+
+    private void waitForTime(int mills, String caption) {
+        timer.reset();
+        // Wait until the shooter charges up
+        while (timer.milliseconds() < mills) {
+            if (!opModeIsActive()) {
+                break;
+            }
+            telemetry.addData("W", caption);
+        }
     }
 
     private void IntakeStop() {}
@@ -300,7 +330,7 @@ public class Auto01 extends LinearOpMode {
 
     private void LiftWobble() {}
 
-    private void GrabWobble() {}
+//    private void GrabWobble() {}
 
     private void DropWobble() {}
 
@@ -340,7 +370,6 @@ public class Auto01 extends LinearOpMode {
 
     private void ForwardUntilAtTargetPosition(double distanceInch) {
 
-        // TODO: uncomment MAX_POWER
         power = MAX_POWER;
 
         SetPIDForward();
