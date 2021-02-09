@@ -45,13 +45,21 @@ public class Auto01 extends LinearOpMode {
     private DcMotor odometerLeft;
     private DcMotor odometerRight;
     private DcMotor odometerBack;
+    private DcMotor odometerWobble;
 
     private int leftCurrentPosition = 0;
     private double leftTargetPosition = 0;
     private int rightCurrentPosition = 0;
     private double rightTargetPosition = 0;
+    private int wobbleCurrentPosition = 0;
+    private double wobbleTargetPosition = 0;
 
     private final double COUNTS_PER_INCH = 290; //307.699557;
+
+    // Wobbly Boi Positions
+    private float COUNTS_PER_DEGREE = 3.11111111111f;
+    private float RETRACTED = 0, OUT = (180 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
+    private double WOBBLE_POWER = 0.2;
 
     // Servos
 //    private Servo ServoLeft;
@@ -107,27 +115,31 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
+                // Raise the Wobble Goal up
+                moveWobbleForward(RAISED, "raised");
                 // Drive to the ring stack
-//                ForwardUntilAtTargetPosition(25);
+                ForwardUntilAtTargetPosition(25);
                 // Detect the ring stack
                 // TODO: Add vision code
                 // Drive to target zone A
-//                rotate(-90, 0.5);
-//                ForwardUntilAtTargetPosition(24);
-//                rotate(90, 0.5);
-//                ForwardUntilAtTargetPosition(27.75);
+                rotate(-90, 0.5);
+                ForwardUntilAtTargetPosition(24);
+                rotate(90, 0.5);
+                ForwardUntilAtTargetPosition(27.75);
                 // Drop the wobble goal
-
-                // Drive to the launch line
-//                ForwardUntilAtTargetPosition(9);
+                moveWobbleForward(OUT, "out");
+                BackwardUntilAtTargetPosition(5);
+                moveWobbleForward(RETRACTED, "retracted");
                 // Drive to the power shots
-//                rotate(90, 0.5);
-//                ForwardUntilAtTargetPosition(40);
-//                rotate(-90, 0.5);
+                rotate(90, 0.5);
+                ForwardUntilAtTargetPosition(40);
+                // Drive to the launch line
+                rotate(-90, 0.5);
+                ForwardUntilAtTargetPosition(14);
                 // Shoot
                 ShootRing();
                 // Park on the launch line
-//                ForwardUntilAtTargetPosition(5.5);
+                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
@@ -231,15 +243,19 @@ public class Auto01 extends LinearOpMode {
         // Initialize Encoders
         odometerLeft = hardwareMap.dcMotor.get("Front Left");
         odometerRight = hardwareMap.dcMotor.get("Front Right");
+        odometerWobble = hardwareMap.dcMotor.get("Wobble Grabber");
 
         odometerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         odometerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odometerWobble.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         odometerLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         odometerRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        odometerWobble.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         leftCurrentPosition = odometerLeft.getCurrentPosition();
         rightCurrentPosition = odometerRight.getCurrentPosition();
+        wobbleCurrentPosition = odometerWobble.getCurrentPosition();
 
 //        // Initialize Servos
 //        ServoLeft = hardwareMap.get(Servo.class, "LeftHook");
@@ -310,12 +326,13 @@ public class Auto01 extends LinearOpMode {
 
     private void waitForTime(int mills, String caption) {
         timer.reset();
+//        telemetry.addData("W", caption);
+//        telemetry.update();
         // Wait until the shooter charges up
         while (timer.milliseconds() < mills) {
             if (!opModeIsActive()) {
                 break;
             }
-            telemetry.addData("W", caption);
         }
     }
 
@@ -326,6 +343,95 @@ public class Auto01 extends LinearOpMode {
     private void CollectRing() {
         // Start Intake
         // Stop Intake
+    }
+
+    private void moveWobbleForward(float position, String caption) {
+
+        // Get Current position in ticks
+        wobbleCurrentPosition = GetWobblePosition();
+
+        if (wobbleCurrentPosition > position) {
+            // Loop until we reach the target
+            while (wobbleCurrentPosition > position) {
+
+                if (!opModeIsActive()) {
+                    break;
+                }
+
+                telemetry.addData("W", "Inside While Loop...");
+
+                // Recalculate the current position
+                wobbleCurrentPosition = GetWobblePosition();
+
+                odometerWobble.setPower(-WOBBLE_POWER);
+
+                telemetry.addData("W", "Moving Wobbly Boi");
+                telemetry.addData("W", "Position: " + caption);
+                telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
+                telemetry.addData("W", "Target Wobble Position: " + position);
+                //LoadTelemetryData();
+                telemetry.update();
+            }
+        } else {
+            // Loop until we reach the target
+            while (wobbleCurrentPosition < position) {
+
+                if (!opModeIsActive()) {
+                    break;
+                }
+
+                telemetry.addData("W", "Inside While Loop...");
+
+                // Recalculate the current position
+                wobbleCurrentPosition = GetWobblePosition();
+
+                odometerWobble.setPower(WOBBLE_POWER);
+
+                telemetry.addData("W", "Moving Wobbly Boi");
+                telemetry.addData("W", "Position: " + caption);
+                telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
+                telemetry.addData("W", "Target Wobble Position: " + position);
+//                LoadTelemetryData();
+                telemetry.update();
+            }
+
+        }
+
+        odometerWobble.setPower(0);
+        waitForTime(3000, "Finished " + caption);
+    }
+
+    private void moveWobbleBackward(int position) {
+
+        // Get Current position in ticks
+        wobbleCurrentPosition = GetWobblePosition();
+
+        position = position * -1;
+
+        // Get Target position by adding current position and # of ticks to travel
+        wobbleTargetPosition = wobbleCurrentPosition + calcDistance(position);
+
+        // Loop until we reach the target
+        while (leftCurrentPosition > leftTargetPosition) {
+
+            if (!opModeIsActive()) {
+                break;
+            }
+
+            telemetry.addData("W", "Inside While Loop...");
+
+            // Recalculate the current position
+            wobbleCurrentPosition = GetWobblePosition();
+
+            odometerWobble.setPower(0.5);
+
+            telemetry.addData("W", "Moving Wobbly Boi");
+            //LoadTelemetryData();
+            telemetry.update();
+        }
+
+        odometerWobble.setPower(0);
+
     }
 
     private void LiftWobble() {}
@@ -425,6 +531,9 @@ public class Auto01 extends LinearOpMode {
         return odometerRight.getCurrentPosition();
     }
 
+    private int GetWobblePosition() {
+        return odometerWobble.getCurrentPosition();// * -1;
+    }
     private void BackwardUntilAtTargetPosition(double distanceInch) {
         power = MIN_POWER;
 
