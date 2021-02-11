@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.christian;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -23,7 +24,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-@Autonomous(name = "McTest Vision Auto", group = "Competition")
+@Disabled
+@Autonomous(name = "McTest Vision Auto", group = "Testing")
 public class TestAuto01 extends LinearOpMode {
 
     /************************
@@ -147,19 +149,19 @@ public class TestAuto01 extends LinearOpMode {
                 rotate(90, 0.5);
                 DeliverWobble(ringCount());
                 // Drop the wobble goal
-//                moveWobbleForward(OUT, "out");
-//                BackwardUntilAtTargetPosition(5);
-//                moveWobbleForward(RETRACTED, "retracted");
+                moveWobbleForward(OUT, "out");
+                BackwardUntilAtTargetPosition(5);
+                moveWobbleForward(RETRACTED, "retracted");
                 // Drive to the power shots
-//                rotate(90, 0.5);
-//                ForwardUntilAtTargetPosition(40);
+                rotate(90, 0.5);
+                ForwardUntilAtTargetPosition(40);
                 // Drive to the launch line
-//                rotate(-90, 0.5);
-//                ForwardUntilAtTargetPosition(14);
+                rotate(-90, 0.5);
+                ForwardUntilAtTargetPosition(14);
                 // Shoot
-//                ShootRing();
+                ShootRing();
                 // Park on the launch line
-//                ForwardUntilAtTargetPosition(5.5);
+                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
