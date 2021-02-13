@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.christian;
 
+import android.util.SparseArray;
+
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -9,8 +11,10 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.vuforia.Frame;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -24,7 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-@Disabled
+//@Disabled
 @Autonomous(name = "McTest Vision Auto", group = "Testing")
 public class TestAuto01 extends LinearOpMode {
 
@@ -139,29 +143,47 @@ public class TestAuto01 extends LinearOpMode {
                     break;
                 }
 
-                // Raise the Wobble Goal up
-                moveWobbleForward(RAISED, "raised");
-                // Drive to the ring stack
-                ForwardUntilAtTargetPosition(25);
-                // Detect the ring stack and drive to the appropriate target zone
-                rotate(-90, 0.5);
-                ForwardUntilAtTargetPosition(24);
-                rotate(90, 0.5);
-                DeliverWobble(ringCount());
-                // Drop the wobble goal
-                moveWobbleForward(OUT, "out");
-                BackwardUntilAtTargetPosition(5);
-                moveWobbleForward(RETRACTED, "retracted");
-                // Drive to the power shots
-                rotate(90, 0.5);
-                ForwardUntilAtTargetPosition(40);
-                // Drive to the launch line
-                rotate(-90, 0.5);
-                ForwardUntilAtTargetPosition(14);
-                // Shoot
-                ShootRing();
-                // Park on the launch line
-                ForwardUntilAtTargetPosition(5.5);
+                TurnCameraOn();
+                waitForTime(5000, "CAMERA ON");
+                //tfod = null;
+                //vuforia = null;
+                ringCount();
+//                TurnCameraOff();
+                TurnCameraOff();
+                waitForTime(5000, "CAMERA OFF");
+
+//                // Raise the Wobble Goal up
+//                moveWobbleForward(RAISED, "raised");
+//                // Drive to the ring stack
+////                ForwardUntilAtTargetPosition(25);
+//                // Detect the ring stack and drive to the appropriate target zone
+////                rotate(-90, 0.5);
+////                ForwardUntilAtTargetPosition(24);
+////                rotate(90, 0.5);
+////                timer.reset();
+////                while (timer.milliseconds() < 5000) {
+////                    if (!opModeIsActive()) {
+////                        break;
+////                    }
+//                TurnCameraOn();
+//                    DeliverWobble(ringCount());
+////                }
+//                TurnCameraOff();
+//                waitForTime(5000, "WAITING");
+//                // Drop the wobble goal
+//                moveWobbleForward(OUT, "out");
+////                BackwardUntilAtTargetPosition(5);
+//                moveWobbleForward(RETRACTED, "retracted");
+//                // Drive to the power shots
+////                rotate(90, 0.5);
+////                ForwardUntilAtTargetPosition(40);
+//                // Drive to the launch line
+////                rotate(-90, 0.5);
+////                ForwardUntilAtTargetPosition(14);
+//                // Shoot
+////                ShootRing();
+//                // Park on the launch line
+////                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
@@ -316,8 +338,8 @@ public class TestAuto01 extends LinearOpMode {
         initVuforia();
         initTfod();
 
-        if (tfod != null) {
-            tfod.activate();
+//        if (tfod != null) {
+//            tfod.activate();
 
             // The TensorFlow software will scale the input images from the camera to a lower resolution.
             // This can result in lower detection accuracy at longer distances (> 55cm or 22").
@@ -328,7 +350,7 @@ public class TestAuto01 extends LinearOpMode {
 
             // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
 //            tfod.setZoom(2.5, 1.78);
-        }
+//        }
 
         telemetry.addData("Status", "Initialized :D");
         telemetry.update();
@@ -483,19 +505,19 @@ public class TestAuto01 extends LinearOpMode {
     private void DeliverWobble(String ringStack) {
         if (ringStack == "Quad") {
             // Drive to Target Zone C
-//            telemetry.addData("R", ringStack + 4);
-            ForwardUntilAtTargetPosition(74.25);
+            telemetry.addData("RINGS: ", ringStack + " " + 4);
+//            ForwardUntilAtTargetPosition(74.25);
         } else if (ringStack ==  "Single") {
             // Drive to Target Zone B
-//            telemetry.addData("R", ringStack + 1);
-            ForwardUntilAtTargetPosition(56.25);
-            rotate(90, 0.5);
-            ForwardUntilAtTargetPosition(24);
-            rotate(-90, 0.5);
+            telemetry.addData("RINGS: ", ringStack + " " + 1);
+//            ForwardUntilAtTargetPosition(56.25);
+//            rotate(90, 0.5);
+//            ForwardUntilAtTargetPosition(24);
+//            rotate(-90, 0.5);
         } else {
             // Drive to Target Zone A
-//            telemetry.addData("R", ringStack + 0);
-            ForwardUntilAtTargetPosition(27.75);
+            telemetry.addData("RINGS: ", ringStack + " " + 0);
+//            ForwardUntilAtTargetPosition(27.75);
         }
         telemetry.update();
         waitForTime(10000, "RingStack");
@@ -934,11 +956,15 @@ public class TestAuto01 extends LinearOpMode {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+
+        //parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+
 
         // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
@@ -1014,6 +1040,14 @@ public class TestAuto01 extends LinearOpMode {
             }
         }
         return null;
+    }
+
+    private void TurnCameraOff() {
+        vuforia.getCamera().close();
+    }
+
+    private  void TurnCameraOn() {
+        tfod.activate();
     }
 
 }
