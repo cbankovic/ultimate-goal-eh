@@ -27,7 +27,7 @@ public class TeleOp01 extends OpMode {
     private int j = 0;
 
     // Wobbly boi
-    private DcMotor FrontArm;
+    private DcMotor WobbleGrabber;
 
     // Intake
     private DcMotor Intake;
@@ -67,12 +67,12 @@ public class TeleOp01 extends OpMode {
 
         // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
 //        // Shooter Initialization
-//        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
-//        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
-//        OuttakeFront.setPower(0);
-//        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
+        OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
+        OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        OuttakeFront.setPower(0);
+        OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
 
 //        // TODO: Need to finialize the servo type for the config
 //        // Servo that pushes the ring into the shooter wheel aka OuttakeFront
@@ -81,12 +81,12 @@ public class TeleOp01 extends OpMode {
 //        OuttakeBack.setPosition(0);
 
 //        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
-//        FrontArm = hardwareMap.dcMotor.get("Front Arm");
-//        FrontArm.setDirection(DcMotorSimple.Direction.FORWARD);
-//        FrontArm.setPower(0);
-//        FrontArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        FrontArm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        FrontArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        WobbleGrabber = hardwareMap.dcMotor.get("Wobble Grabber");
+        WobbleGrabber.setDirection(DcMotorSimple.Direction.FORWARD);
+        WobbleGrabber.setPower(0);
+        WobbleGrabber.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        WobbleGrabber.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        WobbleGrabber.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 //        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
 //        Intake = hardwareMap.dcMotor.get("Intake");
@@ -112,10 +112,8 @@ public class TeleOp01 extends OpMode {
         boolean one_button_b = gamepad1.b;
 
 
-        // Gamepad 2 Drive controls
+        // Gamepad 2 Wobbly Boi Controls
         float two_right_stick_y = gamepad2.right_stick_y;
-        float two_right_stick_x = gamepad2.right_stick_x;
-        float two_left_stick_x  = gamepad2.left_stick_x;
         // Buttons
         boolean two_button_a = gamepad2.a;
         boolean two_button_b = gamepad2.b;
@@ -165,8 +163,10 @@ public class TeleOp01 extends OpMode {
 //                k = 0;
 //            }
 
-            // Outtake Code
+            // Wobbly Boi Code
+            MoveWobblyBoi(two_right_stick_y);
 
+            // Outtake Code
             if (two_button_a) {
                 OuttakeOn();
             } else {
@@ -179,9 +179,6 @@ public class TeleOp01 extends OpMode {
                 ResetPusher();
             }
 
-            // Wobbly Boi Code
-
-            MoveWobblyBoi(two_right_stick_y);
 
         } catch (Exception ex){
             // Catching the exception
@@ -244,7 +241,21 @@ public class TeleOp01 extends OpMode {
     private void IntakeStart() {}
 
     private void MoveWobblyBoi(float right_stick_y) {
-        FrontArm.setPower(right_stick_y);
+        // TODO: Find a way to have the motor keep its position when idle
+        float joystick = right_stick_y;
+        float armPower = 0.5f;
+        if (right_stick_y > 0.2) {
+            WobbleGrabber.setPower(armPower);
+            telemetry.addData("Status: ", "IN");
+        } else if (right_stick_y < -0.2) {
+            WobbleGrabber.setPower(-armPower);
+            telemetry.addData("Status: ", "OUT");
+        } else {
+            WobbleGrabber.setPower(0);
+            telemetry.addData("Status: ", "STOP");
+        }
+        telemetry.addData("Wobbly Boi: ", armPower);
+        telemetry.addData("Right Stick Y: ", joystick);
     }
 
     private void LiftWobble() {}
