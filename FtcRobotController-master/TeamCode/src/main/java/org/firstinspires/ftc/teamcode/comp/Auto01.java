@@ -54,6 +54,8 @@ public class Auto01 extends LinearOpMode {
     private double leftTargetPosition = 0;
     private int rightCurrentPosition = 0;
     private double rightTargetPosition = 0;
+    private int backCurrentPosition = 0;
+    private double backTargetPosition = 0;
     private int wobbleCurrentPosition = 0;
     private double wobbleTargetPosition = 0;
 
@@ -263,18 +265,22 @@ public class Auto01 extends LinearOpMode {
         // Initialize Encoders
         odometerLeft = hardwareMap.dcMotor.get("Front Left");
         odometerRight = hardwareMap.dcMotor.get("Front Right");
+        odometerBack = hardwareMap.dcMotor.get("Back Right");
         odometerWobble = hardwareMap.dcMotor.get("Wobble Grabber");
 
         odometerLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         odometerRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        odometerBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         odometerWobble.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         odometerLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         odometerRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        odometerBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         odometerWobble.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         leftCurrentPosition = odometerLeft.getCurrentPosition();
         rightCurrentPosition = odometerRight.getCurrentPosition();
+        backCurrentPosition = odometerBack.getCurrentPosition();
         wobbleCurrentPosition = odometerWobble.getCurrentPosition();
 
 //        // Initialize Servos
