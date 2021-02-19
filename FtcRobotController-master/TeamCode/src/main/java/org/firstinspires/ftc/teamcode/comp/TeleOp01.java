@@ -20,7 +20,10 @@ public class TeleOp01 extends OpMode {
 
     // Shooter Motors
     private DcMotor OuttakeFront;
-    private Servo OuttakeBack;
+    private Servo pusher;
+    private double PUSHER_IN = 1;
+    private double PUSHER_OUT = 0.975;
+
     private double OuttakeFrontPower = 0.6;
     private double OuttakeBackPower = 1;
     private int k = 0;
@@ -75,10 +78,10 @@ public class TeleOp01 extends OpMode {
         OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
 
 //        // TODO: Need to finialize the servo type for the config
-//        // Servo that pushes the ring into the shooter wheel aka OuttakeFront
-//        OuttakeBack = hardwareMap.servo.get("Back Outtake");
-//        OuttakeBack.setDirection(Servo.Direction.FORWARD);
-//        OuttakeBack.setPosition(0);
+        // Initialize pusher
+        pusher = hardwareMap.get(Servo.class, "Pusher");
+        pusher.setDirection(Servo.Direction.FORWARD);
+        pusher.setPosition(PUSHER_IN);
 
 //        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
         WobbleGrabber = hardwareMap.dcMotor.get("Wobble Grabber");
@@ -229,11 +232,11 @@ public class TeleOp01 extends OpMode {
     }
 
     private void PushRing() {
-        OuttakeBack.setPosition(1);
+        pusher.setPosition(PUSHER_OUT);
     }
 
     private void ResetPusher() {
-        OuttakeBack.setPosition(0);
+        pusher.setPosition(PUSHER_IN);
     }
 
     private void IntakeStop() {}

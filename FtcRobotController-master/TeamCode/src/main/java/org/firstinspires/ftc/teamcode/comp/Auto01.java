@@ -17,7 +17,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
-import org.firstinspires.ftc.teamcode.comp.PIDController;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -40,7 +39,10 @@ public class Auto01 extends LinearOpMode {
 
     // Shooter Motors
     private DcMotor OuttakeFront;
-    private Servo OuttakeBack;
+    private Servo pusher;
+    private double PUSHER_IN = 1;
+    private double PUSHER_OUT = 0.975;
+
     private double OuttakeFrontPower = 0.2;
     private double OuttakeBackPower = 1;
 
@@ -139,15 +141,17 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
+
                 // Raise the Wobble Goal up
                 moveWobbleForward(RAISED, "raised");
                 // Drive to the ring stack
                 ForwardUntilAtTargetPosition(25);
                 // Detect the ring stack and drive to the appropriate target zone
+                String rings = ringCount();
                 rotate(-90, 0.5);
                 ForwardUntilAtTargetPosition(24);
                 rotate(90, 0.5);
-                DeliverWobble(ringCount());
+                DeliverWobble(rings);
                 // Drop the wobble goal
                 moveWobbleForward(OUT, "out");
                 BackwardUntilAtTargetPosition(5);
@@ -156,8 +160,9 @@ public class Auto01 extends LinearOpMode {
                 rotate(90, 0.5);
                 ForwardUntilAtTargetPosition(40);
                 // Drive to the launch line
+                // TODO: Drive to the launch line depending on the ring stack
                 rotate(-90, 0.5);
-                ForwardUntilAtTargetPosition(14);
+                BackwardUntilAtTargetPosition(14);
                 // Shoot
                 ShootRing();
                 // Park on the launch line
@@ -249,9 +254,10 @@ public class Auto01 extends LinearOpMode {
         OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        OuttakeBack = hardwareMap.get(Servo.class, "Back Outtake");
-        OuttakeBack.setPosition(0);
-
+        // Initialize pusher
+        pusher = hardwareMap.get(Servo.class, "Pusher");
+        pusher.setDirection(Servo.Direction.FORWARD);
+        pusher.setPosition(PUSHER_IN);
 
         //initialize wobbly boi
 //        WobbleGrabber
@@ -345,10 +351,10 @@ public class Auto01 extends LinearOpMode {
         telemetry.addData("Outtake", "ON");
     }
     public void PushRing(){
-        OuttakeBack.setPosition(1);
+        pusher.setPosition(PUSHER_OUT);
     }
     public void PushReset(){
-        OuttakeBack.setPosition(0);
+        pusher.setPosition(PUSHER_IN);
     }
 
     public void OuttakeStop() {
@@ -361,17 +367,17 @@ public class Auto01 extends LinearOpMode {
         OuttakeOn();
         waitForTime(5000, "Charging Shooter...");
         PushRing();
-        waitForTime(1000, "Shooting Ring");
+        waitForTime(2000, "Shooting Ring");
         // Stop Shooter
         PushReset();
-        waitForTime(1000, "Resetting Shooter");
+        waitForTime(2000, "Resetting Shooter");
         OuttakeStop();
     }
 
     private void waitForTime(int mills, String caption) {
         timer.reset();
-//        telemetry.addData("W", caption);
-//        telemetry.update();
+        telemetry.addData("W", caption);
+        telemetry.update();
         // Wait until the shooter charges up
         while (timer.milliseconds() < mills) {
             if (!opModeIsActive()) {
