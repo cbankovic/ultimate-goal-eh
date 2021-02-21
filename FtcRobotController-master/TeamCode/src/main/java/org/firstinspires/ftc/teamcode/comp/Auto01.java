@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -81,7 +82,8 @@ public class Auto01 extends LinearOpMode {
     ElapsedTime timer = new ElapsedTime();
 
     // PID
-    private double P = .0025, I = 0.0, D = 1.0;
+    //private double P = .0025, I = 0.0, D = 1.0;
+    private double P = .0025, I = 0.02, D = 0.01;
     private PIDController pidRotate, pidDrive;
 
     // Gyroscope
@@ -144,13 +146,16 @@ public class Auto01 extends LinearOpMode {
                 }
 
 
-                DriveToLaunchLine();
+                //DriveToLaunchLine();
 //                // Raise the Wobble Goal up
 //                moveWobbleForward(RAISED, "raised");
 //                // Drive to the ring stack
 //                ForwardUntilAtTargetPosition(25);
 //                // Detect the ring stack and drive to the appropriate target zone
-//                String rings = ringCount();
+                String rings = ringCount();
+                telemetry.addData("RC", rings);
+                telemetry.update();
+                sleep(5000);
 //                rotate(-90, 0.5);
 //                ForwardUntilAtTargetPosition(24);
 //                rotate(90, 0.5);
@@ -242,10 +247,10 @@ public class Auto01 extends LinearOpMode {
         WheelBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WheelBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        WheelFrontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        WheelFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        WheelBackLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        WheelBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        WheelFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        WheelFrontRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        WheelBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        WheelBackRight.setDirection(DcMotorSimple.Direction.FORWARD);
 
         WheelFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         WheelFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -332,23 +337,23 @@ public class Auto01 extends LinearOpMode {
         }
         resetAngle();
 
-//        // Initialize Vision Software
-//        initVuforia();
-//        initTfod();
-//
-//        if (tfod != null) {
-//            tfod.activate();
-//
-//            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-//            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-//            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-//            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-//            // should be set to the value of the images used to create the TensorFlow Object Detection model
-//            // (typically 1.78 or 16/9).
-//
-//            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-////            tfod.setZoom(2.5, 1.78);
-//        }
+        // Initialize Vision Software
+        initVuforia();
+        initTfod();
+
+        if (tfod != null) {
+            tfod.activate();
+
+            // The TensorFlow software will scale the input images from the camera to a lower resolution.
+            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
+            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
+            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
+            // should be set to the value of the images used to create the TensorFlow Object Detection model
+            // (typically 1.78 or 16/9).
+
+            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
+            // tfod.setZoom(2.5, 1.78);
+        }
 
         telemetry.addData("Status", "Initialized :D");
         telemetry.update();
@@ -967,7 +972,8 @@ public class Auto01 extends LinearOpMode {
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
 
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
+        parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
+        //parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
 
 
         //  Instantiate the Vuforia engine
