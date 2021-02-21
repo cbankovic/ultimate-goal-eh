@@ -18,6 +18,10 @@ public class TeleOp01 extends OpMode {
     private DcMotor WheelBackLeft;
     private DcMotor WheelBackRight;
 
+    private boolean slowMode = false;
+    private boolean reverseMode = false;
+    private double PERCENT_TO_SLOW = 0.5;
+
     // Shooter Motors
     private DcMotor OuttakeFront;
     private Servo pusher;
@@ -31,6 +35,7 @@ public class TeleOp01 extends OpMode {
 
     // Wobbly boi
     private DcMotor WobbleGrabber;
+    float PERCENT_TO_DIVIDE = -0.5f;
 
     // Intake
     private DcMotor Intake;
@@ -41,35 +46,36 @@ public class TeleOp01 extends OpMode {
 
         // Drive Initialization
         WheelFrontLeft = hardwareMap.dcMotor.get("Front Left");
-        WheelFrontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        WheelFrontLeft.setPower(0);
-        WheelFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        WheelFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        WheelFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
         WheelFrontRight = hardwareMap.dcMotor.get("Front Right");
-        WheelFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        WheelFrontRight.setPower(0);
-        WheelFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        WheelFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        WheelFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
         WheelBackLeft = hardwareMap.dcMotor.get("Back Left");
-        WheelBackLeft.setDirection(DcMotorSimple.Direction.FORWARD);
-        WheelBackLeft.setPower(0);
-        WheelBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        WheelBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        WheelBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
         WheelBackRight = hardwareMap.dcMotor.get("Back Right");
+
+        WheelFrontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        WheelFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        WheelBackLeft.setDirection(DcMotorSimple.Direction.FORWARD);
         WheelBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        WheelFrontLeft.setPower(0);
+        WheelFrontRight.setPower(0);
+        WheelBackLeft.setPower(0);
         WheelBackRight.setPower(0);
+
+        WheelFrontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        WheelFrontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        WheelBackLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         WheelBackRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        WheelFrontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        WheelFrontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        WheelBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WheelBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        WheelFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        WheelFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        WheelBackLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         WheelBackRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
-//        // Shooter Initialization
+        // Initialize Shooter
         OuttakeFront = hardwareMap.dcMotor.get("Front Outtake");
         OuttakeFront.setDirection(DcMotorSimple.Direction.FORWARD);
         OuttakeFront.setPower(0);
@@ -77,13 +83,12 @@ public class TeleOp01 extends OpMode {
         OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
 
-//        // TODO: Need to finialize the servo type for the config
         // Initialize pusher
         pusher = hardwareMap.get(Servo.class, "Pusher");
         pusher.setDirection(Servo.Direction.FORWARD);
         pusher.setPosition(PUSHER_IN);
 
-//        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
+        // Initialize Wobble Grabber
         WobbleGrabber = hardwareMap.dcMotor.get("Wobble Grabber");
         WobbleGrabber.setDirection(DcMotorSimple.Direction.FORWARD);
         WobbleGrabber.setPower(0);
@@ -92,6 +97,7 @@ public class TeleOp01 extends OpMode {
         WobbleGrabber.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 //        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
+//        // Initialize Intake
 //        Intake = hardwareMap.dcMotor.get("Intake");
 //        Intake.setDirection(DcMotorSimple.Direction.FORWARD);
 //        Intake.setPower(0);
@@ -101,22 +107,31 @@ public class TeleOp01 extends OpMode {
 
     }
 
+    boolean firstClickSlow = true;
+    boolean firstClickReverse = true;
+    boolean reverseIsOn = false;
+
     @Override
     public void loop() {
 
-        // Gamepad 1 Drive controls
+        // **Gamepad 1** \\
+        // Drive controls
         float one_right_stick_y = gamepad1.right_stick_y;
         float one_right_stick_x = gamepad1.right_stick_x;
         float one_left_stick_x  = gamepad1.left_stick_x;
-
 
         // Buttons
         boolean one_button_a = gamepad1.a;
         boolean one_button_b = gamepad1.b;
 
+        // Bumpers
+        boolean one_bumper_left = gamepad1.left_bumper;
+        boolean one_bumper_right = gamepad1.right_bumper;
 
-        // Gamepad 2 Wobbly Boi Controls
+        // **Gamepad 2** \\
+        // Wobble Grabber Controls
         float two_right_stick_y = gamepad2.right_stick_y;
+
         // Buttons
         boolean two_button_a = gamepad2.a;
         boolean two_button_b = gamepad2.b;
@@ -125,6 +140,48 @@ public class TeleOp01 extends OpMode {
         boolean two_bumper_right = gamepad2.right_bumper;
 
         try {
+
+//            // Reverse Mode controls
+//            if (one_bumper_right && firstClickReverse){
+//                reverseMode = !reverseMode;
+//                firstClickReverse = false;
+//            }
+//
+//            if (!one_bumper_right){
+//                firstClickReverse = true;
+//            }
+//
+//            // Tell if Reverse Mose is engaged
+//            if (reverseMode) {
+//                telemetry.addData("REVERSE MODE", "ENGAGED");
+//                if (!reverseIsOn) {
+//                    one_right_stick_y *= -1;
+//                    one_right_stick_x *= -1;
+//                    reverseIsOn = true;
+//                }
+//            } else {
+//                telemetry.addData("REVERSE MODE", "DISENGAGED");
+//                reverseIsOn = false;
+//            }
+
+
+            // Slow Mode controls
+            if (one_bumper_left && firstClickSlow){
+                slowMode = !slowMode;
+                firstClickSlow = false;
+            }
+
+            if (!one_bumper_left){
+                firstClickSlow = true;
+            }
+
+            // Tell if Slow Mode is engaged
+            if (slowMode) {
+                telemetry.addData("SLOW MODE", "ENGAGED");
+            } else {
+                telemetry.addData("SLOW MODE", "DISENGAGED");
+            }
+
             // Drive Code
             ProMotorControl(one_right_stick_y, -one_right_stick_x, -one_left_stick_x);
             telemetry.addData("Left_ x: ", one_left_stick_x);
@@ -207,10 +264,18 @@ public class TeleOp01 extends OpMode {
         double r = Math.hypot(powerRightX, powerRightY);
         double robotAngle = Math.atan2(powerRightY, powerRightX) - Math.PI / 4;
         double leftX = powerLeftX;
-        final double v1 = r * Math.cos(robotAngle) + leftX;
-        final double v2 = r * Math.sin(robotAngle) - leftX;
-        final double v3 = r * Math.sin(robotAngle) + leftX;
-        final double v4 = r * Math.cos(robotAngle) - leftX;
+
+        double v1 = r * Math.cos(robotAngle) + leftX;
+        double v2 = r * Math.sin(robotAngle) - leftX;
+        double v3 = r * Math.sin(robotAngle) + leftX;
+        double v4 = r * Math.cos(robotAngle) - leftX;
+
+        if (slowMode) {
+            v1 *= PERCENT_TO_SLOW;
+            v2 *= PERCENT_TO_SLOW;
+            v3 *= PERCENT_TO_SLOW;
+            v4 *= PERCENT_TO_SLOW;
+        }
 
         WheelFrontLeft.setPower(v1);
         WheelFrontRight.setPower(v2);
@@ -244,21 +309,17 @@ public class TeleOp01 extends OpMode {
     private void IntakeStart() {}
 
     private void MoveWobblyBoi(float right_stick_y) {
-        // TODO: Find a way to have the motor keep its position when idle
-        float joystick = right_stick_y;
-        float armPower = 0.5f;
-        if (right_stick_y > 0.2) {
+        float armPower = right_stick_y * PERCENT_TO_DIVIDE;
+
+        if (right_stick_y < -0.2 || right_stick_y > 0.2) {
             WobbleGrabber.setPower(armPower);
-            telemetry.addData("Status: ", "IN");
-        } else if (right_stick_y < -0.2) {
-            WobbleGrabber.setPower(-armPower);
-            telemetry.addData("Status: ", "OUT");
+            telemetry.addData("Status: ", "ON");
         } else {
             WobbleGrabber.setPower(0);
-            telemetry.addData("Status: ", "STOP");
+            telemetry.addData("Status: ", "OFF");
         }
         telemetry.addData("Wobbly Boi: ", armPower);
-        telemetry.addData("Right Stick Y: ", joystick);
+        telemetry.addData("Right Stick Y: ", right_stick_y);
     }
 
     private void LiftWobble() {}
