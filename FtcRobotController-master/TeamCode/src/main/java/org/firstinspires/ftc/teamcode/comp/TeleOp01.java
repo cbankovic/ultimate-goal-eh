@@ -21,8 +21,8 @@ public class TeleOp01 extends OpMode {
     // Shooter Motors
     private DcMotor OuttakeFront;
     private Servo pusher;
-    private double PUSHER_IN = 1;
-    private double PUSHER_OUT = 0.975;
+    private double PUSHER_IN = 0.4;
+    private double PUSHER_OUT = 0;
 
     private double OuttakeFrontPower = 0.6;
     private double OuttakeBackPower = 1;

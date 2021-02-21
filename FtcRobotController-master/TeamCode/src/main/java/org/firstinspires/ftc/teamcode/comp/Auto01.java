@@ -40,8 +40,8 @@ public class Auto01 extends LinearOpMode {
     // Shooter Motors
     private DcMotor OuttakeFront;
     private Servo pusher;
-    private double PUSHER_IN = 1;
-    private double PUSHER_OUT = 0.975;
+    private double PUSHER_IN = 0.4;
+    private double PUSHER_OUT = 0;
 
     private double OuttakeFrontPower = 0.2;
     private double OuttakeBackPower = 1;
@@ -129,6 +129,8 @@ public class Auto01 extends LinearOpMode {
 
         SetPIDForward();
 
+        telemetry.clearAll();
+        telemetry.update();
         telemetry.addData("=^/", "Waiting for Start 2");
         telemetry.update();
 
@@ -142,31 +144,32 @@ public class Auto01 extends LinearOpMode {
                 }
 
 
-                // Raise the Wobble Goal up
-                moveWobbleForward(RAISED, "raised");
-                // Drive to the ring stack
-                ForwardUntilAtTargetPosition(25);
-                // Detect the ring stack and drive to the appropriate target zone
-                String rings = ringCount();
-                rotate(-90, 0.5);
-                ForwardUntilAtTargetPosition(24);
-                rotate(90, 0.5);
-                DeliverWobble(rings);
-                // Drop the wobble goal
-                moveWobbleForward(OUT, "out");
-                BackwardUntilAtTargetPosition(5);
-                moveWobbleForward(RETRACTED, "retracted");
-                // Drive to the power shots
-                rotate(90, 0.5);
-                ForwardUntilAtTargetPosition(40);
-                // Drive to the launch line
-                // TODO: Drive to the launch line depending on the ring stack
-                rotate(-90, 0.5);
-                BackwardUntilAtTargetPosition(14);
-                // Shoot
-                ShootRing();
-                // Park on the launch line
-                ForwardUntilAtTargetPosition(5.5);
+                DriveToLaunchLine();
+//                // Raise the Wobble Goal up
+//                moveWobbleForward(RAISED, "raised");
+//                // Drive to the ring stack
+//                ForwardUntilAtTargetPosition(25);
+//                // Detect the ring stack and drive to the appropriate target zone
+//                String rings = ringCount();
+//                rotate(-90, 0.5);
+//                ForwardUntilAtTargetPosition(24);
+//                rotate(90, 0.5);
+//                DeliverWobble(rings);
+//                // Drop the wobble goal
+//                moveWobbleForward(OUT, "out");
+//                BackwardUntilAtTargetPosition(5);
+//                moveWobbleForward(RETRACTED, "retracted");
+//                // Drive to the power shots
+//                rotate(90, 0.5);
+//                ForwardUntilAtTargetPosition(40);
+//                // Drive to the launch line
+//                // TODO: Drive to the launch line depending on the ring stack
+//                rotate(-90, 0.5);
+//                BackwardUntilAtTargetPosition(14);
+//                // Shoot
+//                ShootRing();
+//                // Park on the launch line
+//                ForwardUntilAtTargetPosition(5.5);
 
             } catch (Exception ex) {
 
@@ -221,6 +224,9 @@ public class Auto01 extends LinearOpMode {
 
         // Initialize Motors
         telemetry.addData("w", "init wheels");
+        telemetry.update();
+
+
         WheelFrontLeft = hardwareMap.dcMotor.get("Front Left");
         WheelFrontRight = hardwareMap.dcMotor.get("Front Right");
         WheelBackLeft = hardwareMap.dcMotor.get("Back Left");
@@ -301,7 +307,8 @@ public class Auto01 extends LinearOpMode {
         modernRoboticsI2cGyro = hardwareMap.get(ModernRoboticsI2cGyro.class, "gyro");
         gyro = (IntegratingGyroscope) modernRoboticsI2cGyro;
 
-        telemetry.log().add("Gyro Calibrating. Do Not Move!");
+        telemetry.addData("GC", "Gyro Calibrating. Do Not Move!");
+        telemetry.update();
         modernRoboticsI2cGyro.calibrate();
 
         /* Set PID proportional value to start reducing power at about 50 degrees of rotation.
@@ -316,33 +323,35 @@ public class Auto01 extends LinearOpMode {
         // Wait until the gyro calibration is complete
         timer.reset();
         while (!isStopRequested() && modernRoboticsI2cGyro.isCalibrating()) {
+            if (!opModeIsActive()) {
+                break;
+            }
             telemetry.addData("calibrating", "%s", Math.round(timer.seconds()) % 2 == 0 ? "|.." : "..|");
             telemetry.update();
             sleep(50);
         }
         resetAngle();
 
-        // Initialize Vision Software
-        initVuforia();
-        initTfod();
-
-        if (tfod != null) {
-            tfod.activate();
-
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 1.78 or 16/9).
-
-            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-//            tfod.setZoom(2.5, 1.78);
-        }
+//        // Initialize Vision Software
+//        initVuforia();
+//        initTfod();
+//
+//        if (tfod != null) {
+//            tfod.activate();
+//
+//            // The TensorFlow software will scale the input images from the camera to a lower resolution.
+//            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
+//            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
+//            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
+//            // should be set to the value of the images used to create the TensorFlow Object Detection model
+//            // (typically 1.78 or 16/9).
+//
+//            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
+////            tfod.setZoom(2.5, 1.78);
+//        }
 
         telemetry.addData("Status", "Initialized :D");
         telemetry.update();
-
     }
 
     // TODO: Code These Functions
@@ -385,6 +394,11 @@ public class Auto01 extends LinearOpMode {
             }
         }
     }
+
+    private void DriveToLaunchLine() {
+        ForwardUntilAtTargetPosition(70);
+    }
+
 
     private void IntakeStop() {}
 
@@ -451,38 +465,38 @@ public class Auto01 extends LinearOpMode {
         waitForTime(3000, "Finished " + caption);
     }
 
-    private void moveWobbleBackward(int position) {
-
-        // Get Current position in ticks
-        wobbleCurrentPosition = GetWobblePosition();
-
-        position = position * -1;
-
-        // Get Target position by adding current position and # of ticks to travel
-        wobbleTargetPosition = wobbleCurrentPosition + calcDistance(position);
-
-        // Loop until we reach the target
-        while (leftCurrentPosition > leftTargetPosition) {
-
-            if (!opModeIsActive()) {
-                break;
-            }
-
-            telemetry.addData("W", "Inside While Loop...");
-
-            // Recalculate the current position
-            wobbleCurrentPosition = GetWobblePosition();
-
-            odometerWobble.setPower(0.5);
-
-            telemetry.addData("W", "Moving Wobbly Boi");
-            //LoadTelemetryData();
-            telemetry.update();
-        }
-
-        odometerWobble.setPower(0);
-
-    }
+//    private void moveWobbleBackward(int position) {
+//
+//        // Get Current position in ticks
+//        wobbleCurrentPosition = GetWobblePosition();
+//
+//        position = position * -1;
+//
+//        // Get Target position by adding current position and # of ticks to travel
+//        wobbleTargetPosition = wobbleCurrentPosition + calcDistance(position);
+//
+//        // Loop until we reach the target
+//        while (leftCurrentPosition > leftTargetPosition) {
+//
+//            if (!opModeIsActive()) {
+//                break;
+//            }
+//
+//            telemetry.addData("W", "Inside While Loop...");
+//
+//            // Recalculate the current position
+//            wobbleCurrentPosition = GetWobblePosition();
+//
+//            odometerWobble.setPower(0.5);
+//
+//            telemetry.addData("W", "Moving Wobbly Boi");
+//            //LoadTelemetryData();
+//            telemetry.update();
+//        }
+//
+//        odometerWobble.setPower(0);
+//
+//    }
 
     private void LiftWobble() {}
 
@@ -559,30 +573,37 @@ public class Auto01 extends LinearOpMode {
         // Get Target position by adding current position and # of ticks to travel
         leftTargetPosition = leftCurrentPosition + calcDistance(distanceInch);
 
+        telemetry.clearAll();
+        telemetry.update();
+
         // Loop until we reach the target
-        while (leftCurrentPosition < leftTargetPosition) {
+        while (leftCurrentPosition < leftTargetPosition && opModeIsActive()) {
 
-            if (!opModeIsActive()) {
-                break;
-            }
+//            if (!opModeIsActive()) {
+//                break;
+//            }
 
-            telemetry.addData("W", "Inside While Loop...");
+            //telemetry.addData("W", "Inside While Loop...");
 
             // Recalculate the current position
             leftCurrentPosition = GetLeftPosition();
 
             DriveStraightForwards();
 
-            telemetry.addData("BL", "Back Left: " + GetLeftPosition());
-            telemetry.addData("BR", "Back Right: " + GetRightPosition());
+            //telemetry.addData("CL", "Current Left: " + GetLeftPosition());
+            telemetry.addData("CL", "Current Left   : " + leftCurrentPosition);
+            telemetry.addData("TP", "Target Position: " + leftTargetPosition);
+            //IMUStuff();
+            //telemetry.addData("CR", "Current Right: " + GetRightPosition());
+            //telemetry.addData("CB", "Current Back: " + GetBackPosition());
             //telemetry.addData("CL", "Current Left", +leftCurrentPosition);
             //telemetry.addData("CR", "Current Right", +rightCurrentPosition);
             //telemetry.addData("TL", "Target Left", +leftTargetPosition);
             //telemetry.addData("TR", "Target Right", +rightTargetPosition);
-            telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
-            telemetry.addData("1 imu heading", lastAngles.firstAngle);
-            telemetry.addData("2 global heading", globalAngle);
-            telemetry.addData("correction", correction);
+            //telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
+            //telemetry.addData("1 imu heading", lastAngles.firstAngle);
+            //telemetry.addData("2 global heading", globalAngle);
+            //telemetry.addData("correction", correction);
             //telemetry.addData("getP", pidDrive.getP());
             //telemetry.addData("getI", pidDrive.getI());
             ////telemetry.addData("getD", pidDrive.getD());
@@ -595,16 +616,22 @@ public class Auto01 extends LinearOpMode {
     }
 
     private int GetLeftPosition() {
-        return odometerLeft.getCurrentPosition();// * -1;
+        return odometerLeft.getCurrentPosition() * -1;
     }
 
     private int GetRightPosition() {
-        return odometerRight.getCurrentPosition();
+        return odometerRight.getCurrentPosition() * -1;
+    }
+
+    private int GetBackPosition() {
+        return odometerBack.getCurrentPosition();
     }
 
     private int GetWobblePosition() {
-        return odometerWobble.getCurrentPosition();// * -1;
+        return odometerWobble.getCurrentPosition();
     }
+
+
     private void BackwardUntilAtTargetPosition(double distanceInch) {
         power = MIN_POWER;
 
@@ -621,11 +648,7 @@ public class Auto01 extends LinearOpMode {
         leftTargetPosition = leftCurrentPosition + calcDistance(distanceInch);
 
         // Loop until we reach the target
-        while (leftCurrentPosition > leftTargetPosition) {
-
-            if (!opModeIsActive()) {
-                break;
-            }
+        while (leftCurrentPosition > leftTargetPosition && opModeIsActive()) {
 
             telemetry.addData("W", "Inside While Loop...");
 
