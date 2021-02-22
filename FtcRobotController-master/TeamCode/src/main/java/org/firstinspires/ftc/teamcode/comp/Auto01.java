@@ -118,6 +118,13 @@ public class Auto01 extends LinearOpMode {
      */
     private TFObjectDetector tfod;
 
+    private enum RingsFound {
+        None,
+        Single,
+        Quad,
+        NotFound
+    }
+
     /**************
      *** SCRIPT ***
      **************/
@@ -125,15 +132,16 @@ public class Auto01 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
+        Boolean ringFound = false;
+
         Initialize();
 
         GetGyroInfo();
 
         SetPIDForward();
 
-        telemetry.clearAll();
-        telemetry.update();
-        telemetry.addData("=^/", "Waiting for Start 2");
+        sleep(3000);
+        telemetry.addData("=D", "Ready to start!");
         telemetry.update();
 
         waitForStart();
@@ -150,12 +158,38 @@ public class Auto01 extends LinearOpMode {
 //                // Raise the Wobble Goal up
 //                moveWobbleForward(RAISED, "raised");
 //                // Drive to the ring stack
-//                ForwardUntilAtTargetPosition(25);
-//                // Detect the ring stack and drive to the appropriate target zone
-                String rings = ringCount();
-                telemetry.addData("RC", rings);
-                telemetry.update();
-                sleep(5000);
+                //ForwardUntilAtTargetPosition(20);
+
+
+                // Detect the ring stack and drive to the appropriate target zone
+                switch (FindRings()) {
+                    case None:
+                        telemetry.addData("Rings found: ", "None");
+                        DriveToA();
+                        break;
+                    case Single:
+                        telemetry.addData("Rings found: ", "Single");
+                        DriveToB();
+                        break;
+                    case Quad:
+                        telemetry.addData("Rings found: ", "Quad");
+                        DriveToC();
+                        break;
+                    default:
+                        telemetry.addData("Rings found: ", "NULL VALUE");
+                        break;
+                }
+
+                ShootRing();
+                ShootRing();
+                ShootRing();
+                OuttakeStop();
+
+                // TODO: Park on line
+//                telemetry.addData("RC", rings);
+//                telemetry.update();
+                //sleep(5000);
+                //BackwardUntilAtTargetPosition(12);
 //                rotate(-90, 0.5);
 //                ForwardUntilAtTargetPosition(24);
 //                rotate(90, 0.5);
@@ -183,11 +217,58 @@ public class Auto01 extends LinearOpMode {
             } finally {
 
                 telemetry.update();
+//                sleep(3000);
 //                waitForOtherThing();
             }
-            break;
+            //break;
         }
 
+        TurnOffCamera();
+    }
+
+    private void DriveToC() {
+        //TODO: Straff to the corner
+
+        //TODO: Drive for distance to the C dropoff point
+
+        //TODO: Drop off wobble goal
+
+        //TODO: Start shooter motor
+        //StartShooter();
+
+        //TODO: Drive to shooting position
+
+        //TODO: Exit this method
+    }
+
+    private void DriveToB() {
+        //TODO: Straff to the corner
+
+        //TODO: Drive for distance to the B dropoff point
+
+        //TODO: Drop off wobble goal
+
+        //TODO: Start shooter motor
+        //StartShooter();
+
+        //TODO: Drive to shooting position
+
+        //TODO: Exit this method
+    }
+
+    private void DriveToA() {
+        //TODO: Straff to the corner
+
+        //TODO: Drive for distance to the A dropoff point
+
+        //TODO: Drop off wobble goal
+
+        //TODO: Start shooter motor
+        //StartShooter();
+
+        //TODO: Drive to shooting position
+
+        //TODO: Exit this method
     }
 
 
@@ -342,7 +423,7 @@ public class Auto01 extends LinearOpMode {
         initTfod();
 
         if (tfod != null) {
-            tfod.activate();
+            TurnOnCamera();
 
             // The TensorFlow software will scale the input images from the camera to a lower resolution.
             // This can result in lower detection accuracy at longer distances (> 55cm or 22").
@@ -352,23 +433,26 @@ public class Auto01 extends LinearOpMode {
             // (typically 1.78 or 16/9).
 
             // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-            // tfod.setZoom(2.5, 1.78);
+            tfod.setZoom(2.5, 1.7777);
+            //tfod.setClippingMargins(350, 150, 350, 200);
         }
 
         telemetry.addData("Status", "Initialized :D");
         telemetry.update();
     }
 
-    // TODO: Code These Functions
+    private  void StartShooter(){
+        // Start Shooter
+        OuttakeOn();
+        waitForTime(5000, "Charging Shooter...");
+    }
+    public void PushRing() { pusher.setPosition(PUSHER_OUT); }
+
+    public void PushReset() { pusher.setPosition(PUSHER_IN); }
+
     public void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
         telemetry.addData("Outtake", "ON");
-    }
-    public void PushRing(){
-        pusher.setPosition(PUSHER_OUT);
-    }
-    public void PushReset(){
-        pusher.setPosition(PUSHER_IN);
     }
 
     public void OuttakeStop() {
@@ -377,27 +461,17 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void ShootRing() {
-        // Start Shooter
-        OuttakeOn();
-        waitForTime(5000, "Charging Shooter...");
         PushRing();
-        waitForTime(2000, "Shooting Ring");
-        // Stop Shooter
+        waitForTime(300, "Shooting Ring");
         PushReset();
-        waitForTime(2000, "Resetting Shooter");
-        OuttakeStop();
+        waitForTime(1000, "Resetting shooter");
     }
 
     private void waitForTime(int mills, String caption) {
-        timer.reset();
         telemetry.addData("W", caption);
         telemetry.update();
         // Wait until the shooter charges up
-        while (timer.milliseconds() < mills) {
-            if (!opModeIsActive()) {
-                break;
-            }
-        }
+        sleep(mills);
     }
 
     private void DriveToLaunchLine() {
@@ -405,9 +479,11 @@ public class Auto01 extends LinearOpMode {
     }
 
 
-    private void IntakeStop() {}
+    private void IntakeStop() {
+    }
 
-    private void IntakeStart() {}
+    private void IntakeStart() {
+    }
 
     private void CollectRing() {
         // Start Intake
@@ -503,18 +579,20 @@ public class Auto01 extends LinearOpMode {
 //
 //    }
 
-    private void LiftWobble() {}
+    private void LiftWobble() {
+    }
 
 //    private void GrabWobble() {}
 
-    private void DropWobble() {}
+    private void DropWobble() {
+    }
 
     private void DeliverWobble(String ringStack) {
         if (ringStack == "Quad") {
             // Drive to Target Zone C
 //            telemetry.addData("R", ringStack + 4);
             ForwardUntilAtTargetPosition(74.25);
-        } else if (ringStack ==  "Single") {
+        } else if (ringStack == "Single") {
             // Drive to Target Zone B
 //            telemetry.addData("R", ringStack + 1);
             ForwardUntilAtTargetPosition(56.25);
@@ -530,7 +608,8 @@ public class Auto01 extends LinearOpMode {
         waitForTime(10000, "RingStack");
     }
 
-    private void IdentifyRingNumber() {} // TODO: make int
+    private void IdentifyRingNumber() {
+    } // TODO: make int
 
     private void DriveStraightForwards() {
         correction = pidDrive.performPID(getAngle());
@@ -662,18 +741,18 @@ public class Auto01 extends LinearOpMode {
 
             DriveStraightBackwards();
 
-            telemetry.addData("LT", "Left Target  : " + leftTargetPosition);
-            telemetry.addData("LT", "Left Current : " + leftCurrentPosition);
-            telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
-            telemetry.addData("1 imu heading", lastAngles.firstAngle);
-            telemetry.addData("2 global heading", globalAngle);
-            telemetry.addData("correction", correction);
-            telemetry.addData("getP", pidDrive.getP());
-            telemetry.addData("getI", pidDrive.getI());
-            telemetry.addData("getD", pidDrive.getD());
-            telemetry.addData("getError", pidDrive.getError());
-            //LoadTelemetryData();
-            telemetry.update();
+//            telemetry.addData("LT", "Left Target  : " + leftTargetPosition);
+//            telemetry.addData("LT", "Left Current : " + leftCurrentPosition);
+//            telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
+//            telemetry.addData("1 imu heading", lastAngles.firstAngle);
+//            telemetry.addData("2 global heading", globalAngle);
+//            telemetry.addData("correction", correction);
+//            telemetry.addData("getP", pidDrive.getP());
+//            telemetry.addData("getI", pidDrive.getI());
+//            telemetry.addData("getD", pidDrive.getD());
+//            telemetry.addData("getError", pidDrive.getError());
+//            //LoadTelemetryData();
+//            telemetry.update();
         }
         BasicMotorControl(0.0);
 
@@ -966,20 +1045,12 @@ public class Auto01 extends LinearOpMode {
      * Initialize the Vuforia localization engine.
      */
     private void initVuforia() {
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         */
         VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraName = hardwareMap.get(WebcamName.class, "Webcam 1");
-        //parameters.cameraDirection = VuforiaLocalizer.CameraDirection.BACK;
-
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-
-        // Loading trackables is not necessary for the TensorFlow Object Detection engine.
     }
 
     /**
@@ -994,65 +1065,100 @@ public class Auto01 extends LinearOpMode {
         tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABEL_FIRST_ELEMENT, LABEL_SECOND_ELEMENT);
     }
 
-    private String ringCount() {
+//    private String ringCount() {
+//        String label = "";
+//        if (tfod != null) {
+//            // getUpdatedRecognitions() will return null if no new information is available since
+//            // the last time that call was made.
+//            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+//            if (updatedRecognitions != null) {
+//                telemetry.addData("# Object Detected", updatedRecognitions.size());
+//                // step through the list of recognitions and display boundary info.
+//                int i = 0;
+//                for (Recognition recognition : updatedRecognitions) {
+//                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+//                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+//                            recognition.getLeft(), recognition.getTop());
+//                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+//                            recognition.getRight(), recognition.getBottom());
+//                    label = recognition.getLabel();
+//                }
+//                telemetry.update();
+//                return label;
+//            }
+//        }
+//        return "";
+//    }
+//
+
+    private void TurnOnCamera() {
         if (tfod != null) {
-            // getUpdatedRecognitions() will return null if no new information is available since
-            // the last time that call was made.
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-            if (updatedRecognitions != null) {
-                telemetry.addData("# Object Detected", updatedRecognitions.size());
-
-                // step through the list of recognitions and display boundary info.
-                int i = 0;
-                for (Recognition recognition : updatedRecognitions) {
-
-                    float right = recognition.getBottom();
-                    float left = recognition.getTop();
-                    float top = recognition.getRight();
-                    float bottom = recognition.getLeft();
-
-                    float height = Math.abs( top - bottom);
-                    float width = Math.abs(right - left);
-                    float area = Math.abs(height * width);
-                    float xCenter = (right + left) / 2;
-                    float yCenter = (top + bottom) / 2;
-
-                    // 1280 x 720 = 720p Resolution
-                    // 640 (x) x 360 (y) = center
-                    String horizontal = (xCenter < 620  ? "Left" : (xCenter > 660 ? "Right" : "Good"));
-                    String vertical = (yCenter < 350  ? "Down" : (yCenter > 370 ? "Up" : "Good"));
-
-                    String ringLabel = recognition.getLabel();
-                    telemetry.addData(String.format("label (%d)", i), ringLabel);
-                    telemetry.addData(String.format("  top, left (%d)", i), "%.03f , %.03f",
-                            top, left);
-                    telemetry.addData(String.format("  bottom, right (%d)", i), "%.03f , %.03f",
-                            bottom , right);
-                    telemetry.addData(String.format("  height, width (%d)", i), "%.03f , %.03f",
-                            height, width);
-                    telemetry.addData(String.format("  area (%d)", i), "%.03f ",area);
-                    telemetry.addData(String.format("  xC, yC (%d)", i), "%.03f , %.03f",
-                            xCenter, yCenter);
-                    telemetry.addData(String.format("  horizon, vert (%d)", i), "%s, %s", horizontal, vertical);
-
-
-                    if (area <= 24000){
-                        telemetry.addData("Distance", "14 inches");
-                    } else if (area <= 42000){
-                        telemetry.addData("Distance", "12 inches");
-                    } else if (area <= 59000){
-                        telemetry.addData("Distance", "10 inches");
-                    } else if (area <= 99000){
-                        telemetry.addData("Distance", "8 inches");
-                    } else if (area <= 105000){
-                        telemetry.addData("Distance", "6 inches");
-                    }
-                    return ringLabel;
-                }
-                telemetry.update();
-            }
+            tfod.activate();
         }
-        return null;
+    }
+
+    private void TurnOffCamera() {
+        if (tfod != null) {
+            tfod.shutdown();
+            vuforia.getCamera().close();
+        }
+    }
+
+    private RingsFound FindRings() {
+        // getUpdatedRecognitions() will return null if no new information is available since
+        // the last time that call was made.
+//        Boolean allDone = false;
+//
+        RingsFound returnRings = RingsFound.None;
+
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset();
+        while (opModeIsActive()) {
+
+            if (tfod != null) {
+//                telemetry.addData("TFOD", "Not null");
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                if (updatedRecognitions != null) {
+//                    telemetry.addData("Recognition", "Not null");
+//                    telemetry.addData("Recognition Size", updatedRecognitions.size());
+                    if (updatedRecognitions.size() > 0) {
+                        for (Recognition recognition : updatedRecognitions) {
+//                            telemetry.addData("Ring Label", recognition.getLabel());
+//                        sleep(2000);
+
+                            if (recognition.getLabel().equals("Quad")) {
+                                returnRings = RingsFound.Quad;
+                            } else if (recognition.getLabel().equals("Single")) {
+                                returnRings = RingsFound.Single;
+                            }
+//                            else {
+//                                returnRings = RingsFound.NotFound;
+//                            }
+                        }
+                    }
+//                    else {
+//                        returnRings = RingsFound.None;
+//                    }
+                    //return RingsFound.None;
+                }
+//                else {
+//                    telemetry.addData("Recognition", "NULL");
+//                    returnRings =  RingsFound.None;
+//                }
+            }
+//            else {
+//                telemetry.addData("TFOD", "NULL");
+//                returnRings = RingsFound.NotFound;
+//            }
+//            telemetry.addData("Timer", timer.milliseconds());
+//            telemetry.update();
+            if (timer.milliseconds() >= 1000)
+                break;
+            //sleep(2000);
+        }
+
+        return returnRings;
+//        return null;
     }
 
 }
