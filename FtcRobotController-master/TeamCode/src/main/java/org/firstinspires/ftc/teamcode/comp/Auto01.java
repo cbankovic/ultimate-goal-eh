@@ -154,23 +154,10 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
+                // TODO: uncomment
                 //RingsFound ringLocation = FindRings();
-                RingsFound ringLocation = RingsFound.Quad;
-
-//                switch (ringLocation) {
-//                    case None:
-//                        telemetry.addData("Rings found: ", "None");
-//                        break;
-//                    case Single:
-//                        telemetry.addData("Rings found: ", "Single");
-//                        break;
-//                    case Quad:
-//                        telemetry.addData("Rings found: ", "Quad");
-//                        break;
-//                    default:
-//                        telemetry.addData("Rings found: ", "NULL VALUE");
-//                        break;
-//                }
+                // TODO: delete line
+                RingsFound ringLocation = RingsFound.Single;
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
@@ -204,9 +191,7 @@ public class Auto01 extends LinearOpMode {
                         rotate(-30, 0.4);
 
                         // Drop the wobble goal
-                        moveWobbleForward(OUT, "OUT");
-                        sleep(200);
-                        moveWobbleForward(RETRACTED, "RETRACTED");
+                        PlaceWobbleGoal();
 
                         // Rotate before parking on the line
                         rotate(30, 0.5);
@@ -216,13 +201,14 @@ public class Auto01 extends LinearOpMode {
                         telemetry.addData("Rings found: ", "Single");
                         break;
                     case Quad:
-                        telemetry.addData("Rings found: ", "Quad");
+                        // Rotate before parking on the line
+                        rotate(20, 0.5);
+                        ForwardUntilAtTargetPosition(18);
                         break;
                     default:
                         telemetry.addData("Rings found: ", "NULL VALUE");
                         break;
                 }
-
 
 //
                 // TODO: Park on line
@@ -269,30 +255,32 @@ public class Auto01 extends LinearOpMode {
 
     private void DriveToC() {
 
-        //TODO: Drive for distance to the C dropoff point
+        // Drive for distance to the C dropoff point
         ForwardUntilAtTargetPosition(5);
 
-        //TODO: Strafe to the corner
-        StrafeUntilTimerReached(StrafeDirection.Right, 0.5, 3000);
+        // Rotate to get around the ring stack
+        rotate(-20, 0.4);
 
-//        //TODO: Drive for distance to the C dropoff point
-//        ForwardUntilAtTargetPosition(99.25);
-//
-//        //TODO: Drop off wobble goal
-//        moveWobbleForward(OUT, "OUT");
-//        BackwardUntilAtTargetPosition(5);
-//        moveWobbleForward(RETRACTED, "RETRACTED");
-//
-//        //TODO: Start shooter motor
-//        StartShooter();
-//
-//        //TODO: Drive to shooting position
-//        rotate(90, 0.4);
-//        ForwardUntilAtTargetPosition(24);
-//        rotate(-90, 0.4);
-//        BackwardUntilAtTargetPosition(30.5);
+        // Drive past the ring stack
+        ForwardUntilAtTargetPosition(50);
 
-        //TODO: Exit this method
+        // Rotate to drive to the C target zone
+        rotate(20, 0.4);
+
+        // Drive to the target zone
+        ForwardUntilAtTargetPosition(45);
+
+        // Drop off wobble goal
+        PlaceWobbleGoal();
+
+        // Start shooter motor
+        StartShooter();
+
+        // Drive to shooting position
+        rotate(-20, 0.4);
+        BackwardUntilAtTargetPosition(42);
+        rotate(45, 0.4);
+        rotate(18, 0.4);
     }
 
     private void DriveToB() {
@@ -328,6 +316,12 @@ public class Auto01 extends LinearOpMode {
 
         // Rotate robot to shoot in the high goal
         rotate(18, 0.5);
+    }
+
+    private void PlaceWobbleGoal() {
+        moveWobbleForward(OUT, "OUT");
+        sleep(200);
+        moveWobbleForward(RETRACTED, "RETRACTED");
     }
 
 
