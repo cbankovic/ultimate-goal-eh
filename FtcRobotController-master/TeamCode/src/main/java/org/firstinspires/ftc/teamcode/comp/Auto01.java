@@ -66,8 +66,8 @@ public class Auto01 extends LinearOpMode {
 
     // Wobbly Boi Positions
     private float COUNTS_PER_DEGREE = 3.11111111111f;
-    private float RETRACTED = 0, OUT = (150 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
-    private double WOBBLE_POWER = 0.55;
+    private float RETRACTED = 0, OUT = (80 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
+    private double WOBBLE_POWER = 0.50;
 
     // Servos
 //    private Servo ServoLeft;
@@ -140,7 +140,8 @@ public class Auto01 extends LinearOpMode {
 
         SetPIDForward();
 
-        sleep(3000);
+        // TODO: uncomment
+        //sleep(3000);
         telemetry.addData("=D", "Ready to start!");
         telemetry.update();
 
@@ -153,19 +154,29 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
+                //RingsFound ringLocation = FindRings();
+                RingsFound ringLocation = RingsFound.Quad;
 
-                //DriveToLaunchLine();
-//                // Raise the Wobble Goal up
-//                moveWobbleForward(RAISED, "raised");
-//                // Drive to the ring stack
-                //ForwardUntilAtTargetPosition(20);
-                RingsFound ringLocation = FindRings();
+//                switch (ringLocation) {
+//                    case None:
+//                        telemetry.addData("Rings found: ", "None");
+//                        break;
+//                    case Single:
+//                        telemetry.addData("Rings found: ", "Single");
+//                        break;
+//                    case Quad:
+//                        telemetry.addData("Rings found: ", "Quad");
+//                        break;
+//                    default:
+//                        telemetry.addData("Rings found: ", "NULL VALUE");
+//                        break;
+//                }
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
                     case None:
                         telemetry.addData("Rings found: ", "None");
-                        //DriveToA();
+                        DriveToA();
                         break;
                     case Single:
                         telemetry.addData("Rings found: ", "Single");
@@ -185,20 +196,21 @@ public class Auto01 extends LinearOpMode {
 //                ShootRing();
 //                OuttakeStop();
 
-
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
                     case None:
-//                        telemetry.addData("Rings found: ", "None");
+                        // Rotate to drop the wobble goal
                         rotate(-30, 0.4);
                         rotate(-30, 0.4);
-//
-                        ForwardUntilAtTargetPosition(8);
 
-//                      TODO: Drop off wobble goal
+                        // Drop the wobble goal
                         moveWobbleForward(OUT, "OUT");
                         sleep(200);
                         moveWobbleForward(RETRACTED, "RETRACTED");
+
+                        // Rotate before parking on the line
+                        rotate(30, 0.5);
+                        ForwardUntilAtTargetPosition(18);
                         break;
                     case Single:
                         telemetry.addData("Rings found: ", "Single");
@@ -256,25 +268,29 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void DriveToC() {
-        //TODO: Strafe to the corner
-        StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
 
         //TODO: Drive for distance to the C dropoff point
-        ForwardUntilAtTargetPosition(99.25);
+        ForwardUntilAtTargetPosition(5);
 
-        //TODO: Drop off wobble goal
-        moveWobbleForward(OUT, "OUT");
-        BackwardUntilAtTargetPosition(5);
-        moveWobbleForward(RETRACTED, "RETRACTED");
+        //TODO: Strafe to the corner
+        StrafeUntilTimerReached(StrafeDirection.Right, 0.5, 3000);
 
-        //TODO: Start shooter motor
-        StartShooter();
-
-        //TODO: Drive to shooting position
-        rotate(90, 0.4);
-        ForwardUntilAtTargetPosition(24);
-        rotate(-90, 0.4);
-        BackwardUntilAtTargetPosition(30.5);
+//        //TODO: Drive for distance to the C dropoff point
+//        ForwardUntilAtTargetPosition(99.25);
+//
+//        //TODO: Drop off wobble goal
+//        moveWobbleForward(OUT, "OUT");
+//        BackwardUntilAtTargetPosition(5);
+//        moveWobbleForward(RETRACTED, "RETRACTED");
+//
+//        //TODO: Start shooter motor
+//        StartShooter();
+//
+//        //TODO: Drive to shooting position
+//        rotate(90, 0.4);
+//        ForwardUntilAtTargetPosition(24);
+//        rotate(-90, 0.4);
+//        BackwardUntilAtTargetPosition(30.5);
 
         //TODO: Exit this method
     }
@@ -304,35 +320,14 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void DriveToA() {
-        //TODO: Start shooter motor
+        // Turn on the shooter motor
         StartShooter();
 
-        //ForwardUntilAtTargetPosition(55);
-        //TODO: Strafe to the corner
-        //StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
-        //rotate(18, 0.4);
+        // Drive to the shooting location
+        ForwardUntilAtTargetPosition(55);
 
-        //TODO: Drive for distance to the A dropoff point
-        //ForwardUntilAtTargetPosition(49);
-
-//        TODO: Drop off wobble goal
-        //moveWobbleForward(OUT, "OUT");
-//        BackwardUntilAtTargetPosition(5);
-//        sleep(200);
-//        moveWobbleForward(RETRACTED, "RETRACTED");
-
-
-        //TODO: Drive to shooting position
-//        rotate(90, 0.4);
-//        ForwardUntilAtTargetPosition(24);
-//        rotate(-90, 0.4);
-//        ForwardUntilAtTargetPosition(12);
-//        rotate(20, 0.4);
-//        rotate(45, 0.4);
-        //ForwardUntilAtTargetPosition(9);
-        //rotate(15, 0.4);
-
-        //TODO: Exit this method
+        // Rotate robot to shoot in the high goal
+        rotate(18, 0.5);
     }
 
 
@@ -503,7 +498,7 @@ public class Auto01 extends LinearOpMode {
             //tfod.setClippingMargins(350, 150, 350, 200);
         }
 
-        telemetry.addData("Status", "Initialized :D");
+        telemetry.addData("Status", "Initializing camera");
         telemetry.update();
     }
 
@@ -1078,7 +1073,7 @@ public class Auto01 extends LinearOpMode {
             if (strafeDirection == StrafeDirection.Left) {
                 ProMotorControl(-0.0, -power, 0.0);
             } else if (strafeDirection == StrafeDirection.Right) {
-                ProMotorControl(-0.1, power, 0.0);
+                ProMotorControl(-0.0, power, 0.0);
             } else {
                 telemetry.addData("          ERROR:", "Valid strafing direction not specified.");
                 telemetry.addData("TROUBLESHOOTING:", "Check if direction parameter is capitalized properly.");
