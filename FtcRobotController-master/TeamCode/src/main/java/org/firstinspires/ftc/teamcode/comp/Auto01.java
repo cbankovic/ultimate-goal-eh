@@ -44,7 +44,7 @@ public class Auto01 extends LinearOpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.68;
+    private double OuttakeFrontPower = 0.65;
     private double OuttakeBackPower = 1;
 
     // Encoders
@@ -132,15 +132,13 @@ public class Auto01 extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        Boolean ringFound = false;
-
         Initialize();
 
         GetGyroInfo();
 
         SetPIDForward();
 
-        // TODO: uncomment
+        // TODO: uncomment to wait for the camera to activate
         //sleep(3000);
         telemetry.addData("=D", "Ready to start!");
         telemetry.update();
@@ -156,7 +154,7 @@ public class Auto01 extends LinearOpMode {
 
                 // TODO: uncomment
                 //RingsFound ringLocation = FindRings();
-                // TODO: delete line
+                // TODO: delete line - TESTING ONLY
                 RingsFound ringLocation = RingsFound.Single;
 
                 // Detect the ring stack and drive to the appropriate target zone
@@ -175,13 +173,18 @@ public class Auto01 extends LinearOpMode {
                         break;
                     default:
                         telemetry.addData("Rings found: ", "NULL VALUE");
+                        // Issue with vision - we randomly select target zone B
+                        // May the odds forever be in your favor
+                        // We have to navigate around the stack if there is one present
+                        ringLocation = RingsFound.Single;
+                        DriveToB();
                         break;
                 }
 
-//                ShootRing();
-//                ShootRing();
-//                ShootRing();
-//                OuttakeStop();
+                ShootRing();
+                ShootRing();
+                ShootRing();
+                OuttakeStop();
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
@@ -198,7 +201,9 @@ public class Auto01 extends LinearOpMode {
                         ForwardUntilAtTargetPosition(18);
                         break;
                     case Single:
-                        telemetry.addData("Rings found: ", "Single");
+                        // Rotate before parking on the line
+                        rotate(20, 0.5);
+                        ForwardUntilAtTargetPosition(18);
                         break;
                     case Quad:
                         // Rotate before parking on the line
@@ -209,43 +214,12 @@ public class Auto01 extends LinearOpMode {
                         telemetry.addData("Rings found: ", "NULL VALUE");
                         break;
                 }
-
-//
-                // TODO: Park on line
-//                ForwardUntilAtTargetPosition(12);
-//                telemetry.addData("RC", rings);
-//                telemetry.update();
-                //sleep(5000);
-                //BackwardUntilAtTargetPosition(12);
-//                rotate(-90, 0.5);
-//                ForwardUntilAtTargetPosition(24);
-//                rotate(90, 0.5);
-//                DeliverWobble(rings);
-//                // Drop the wobble goal
-//                moveWobbleForward(OUT, "out");
-//                BackwardUntilAtTargetPosition(5);
-//                moveWobbleForward(RETRACTED, "retracted");
-//                // Drive to the power shots
-//                rotate(90, 0.5);
-//                ForwardUntilAtTargetPosition(40);
-//                // Drive to the launch line
-//                // TODO: Drive to the launch line depending on the ring stack
-//                rotate(-90, 0.5);
-//                BackwardUntilAtTargetPosition(14);
-//                // Shoot
-//                ShootRing();
-//                // Park on the launch line
-//                ForwardUntilAtTargetPosition(5.5);
-
             } catch (Exception ex) {
 
                 LoadExceptionData(ex, "while");
 
             } finally {
-
                 telemetry.update();
-//                sleep(3000);
-//                waitForOtherThing();
             }
             break;
         }
@@ -284,27 +258,38 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void DriveToB() {
-        //TODO: Strafe to the corner
-        StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
+        // Drive for distance before rotating
+        ForwardUntilAtTargetPosition(5);
 
-        //TODO: Drive for distance to the B dropoff point
-        ForwardUntilAtTargetPosition(76.25);
-        rotate(90, 0.4);
-        ForwardUntilAtTargetPosition(24);
-        rotate(-90, 0.4);
+        // Rotate to get around the ring stack
+        rotate(-20, 0.4);
 
-        //TODO: Drop off wobble goal
-        moveWobbleForward(OUT, "OUT");
-        BackwardUntilAtTargetPosition(5);
-        moveWobbleForward(RETRACTED, "RETRACTED");
+        // Drive past the ring stack
+        ForwardUntilAtTargetPosition(50);
 
-        //TODO: Start shooter motor
+        // Rotate towards target zone B
+        rotate(30, 0.4);
+        rotate(25, 0.4);
+
+        // Drive to target zone B
+        ForwardUntilAtTargetPosition(20);
+
+        // Place wobble goal
+        PlaceWobbleGoal();
+
+        // Rotate to get around the ring stack
+        rotate(-30, 0.4);
+        rotate(-30, 0.4);
+
+        // Start shooter motor
         StartShooter();
 
-        //TODO: Drive to shooting position
-        ForwardUntilAtTargetPosition(11.5);
+        // Drive to the shooting location
+        BackwardUntilAtTargetPosition(17);
 
-        //TODO: Exit this method
+        // Rotate robot to shoot in the high goal
+        rotate(30, 0.5);
+        rotate(18, 0.5);
     }
 
     private void DriveToA() {
@@ -436,14 +421,6 @@ public class Auto01 extends LinearOpMode {
         backCurrentPosition = odometerBack.getCurrentPosition();
         wobbleCurrentPosition = odometerWobble.getCurrentPosition();
 
-//        // Initialize Servos
-//        ServoLeft = hardwareMap.get(Servo.class, "LeftHook");
-//        ServoRight = hardwareMap.get(Servo.class, "RightHook");
-//
-//        // Close Servo in preparation to grab the foundation
-//        ServoLeft.setPosition(1.0);
-//        ServoRight.setPosition(0.0);
-
         // Initialize IMU
         modernRoboticsI2cGyro = hardwareMap.get(ModernRoboticsI2cGyro.class, "gyro");
         gyro = (IntegratingGyroscope) modernRoboticsI2cGyro;
@@ -524,7 +501,7 @@ public class Auto01 extends LinearOpMode {
         PushRing();
         waitForTime(300, "Shooting Ring");
         PushReset();
-        waitForTime(1500, "Resetting shooter");
+        waitForTime(1000, "Resetting shooter");
     }
 
     private void waitForTime(int mills, String caption) {
