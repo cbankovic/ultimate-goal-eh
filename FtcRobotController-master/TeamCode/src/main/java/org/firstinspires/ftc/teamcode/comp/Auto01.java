@@ -44,7 +44,7 @@ public class Auto01 extends LinearOpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.2;
+    private double OuttakeFrontPower = 0.68;
     private double OuttakeBackPower = 1;
 
     // Encoders
@@ -66,8 +66,8 @@ public class Auto01 extends LinearOpMode {
 
     // Wobbly Boi Positions
     private float COUNTS_PER_DEGREE = 3.11111111111f;
-    private float RETRACTED = 0, OUT = (180 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
-    private double WOBBLE_POWER = 0.2;
+    private float RETRACTED = 0, OUT = (150 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
+    private double WOBBLE_POWER = 0.55;
 
     // Servos
 //    private Servo ServoLeft;
@@ -159,13 +159,13 @@ public class Auto01 extends LinearOpMode {
 //                moveWobbleForward(RAISED, "raised");
 //                // Drive to the ring stack
                 //ForwardUntilAtTargetPosition(20);
-
+                RingsFound ringLocation = FindRings();
 
                 // Detect the ring stack and drive to the appropriate target zone
-                switch (FindRings()) {
+                switch (ringLocation) {
                     case None:
                         telemetry.addData("Rings found: ", "None");
-                        DriveToA();
+                        //DriveToA();
                         break;
                     case Single:
                         telemetry.addData("Rings found: ", "Single");
@@ -180,12 +180,41 @@ public class Auto01 extends LinearOpMode {
                         break;
                 }
 
-                ShootRing();
-                ShootRing();
-                ShootRing();
-                OuttakeStop();
+//                ShootRing();
+//                ShootRing();
+//                ShootRing();
+//                OuttakeStop();
 
+
+                // Detect the ring stack and drive to the appropriate target zone
+                switch (ringLocation) {
+                    case None:
+//                        telemetry.addData("Rings found: ", "None");
+                        rotate(-30, 0.4);
+                        rotate(-30, 0.4);
+//
+                        ForwardUntilAtTargetPosition(8);
+
+//                      TODO: Drop off wobble goal
+                        moveWobbleForward(OUT, "OUT");
+                        sleep(200);
+                        moveWobbleForward(RETRACTED, "RETRACTED");
+                        break;
+                    case Single:
+                        telemetry.addData("Rings found: ", "Single");
+                        break;
+                    case Quad:
+                        telemetry.addData("Rings found: ", "Quad");
+                        break;
+                    default:
+                        telemetry.addData("Rings found: ", "NULL VALUE");
+                        break;
+                }
+
+
+//
                 // TODO: Park on line
+//                ForwardUntilAtTargetPosition(12);
 //                telemetry.addData("RC", rings);
 //                telemetry.update();
                 //sleep(5000);
@@ -220,53 +249,88 @@ public class Auto01 extends LinearOpMode {
 //                sleep(3000);
 //                waitForOtherThing();
             }
-            //break;
+            break;
         }
 
         TurnOffCamera();
     }
 
     private void DriveToC() {
-        //TODO: Straff to the corner
+        //TODO: Strafe to the corner
+        StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
 
         //TODO: Drive for distance to the C dropoff point
+        ForwardUntilAtTargetPosition(99.25);
 
         //TODO: Drop off wobble goal
+        moveWobbleForward(OUT, "OUT");
+        BackwardUntilAtTargetPosition(5);
+        moveWobbleForward(RETRACTED, "RETRACTED");
 
         //TODO: Start shooter motor
-        //StartShooter();
+        StartShooter();
 
         //TODO: Drive to shooting position
+        rotate(90, 0.4);
+        ForwardUntilAtTargetPosition(24);
+        rotate(-90, 0.4);
+        BackwardUntilAtTargetPosition(30.5);
 
         //TODO: Exit this method
     }
 
     private void DriveToB() {
-        //TODO: Straff to the corner
+        //TODO: Strafe to the corner
+        StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
 
         //TODO: Drive for distance to the B dropoff point
+        ForwardUntilAtTargetPosition(76.25);
+        rotate(90, 0.4);
+        ForwardUntilAtTargetPosition(24);
+        rotate(-90, 0.4);
 
         //TODO: Drop off wobble goal
+        moveWobbleForward(OUT, "OUT");
+        BackwardUntilAtTargetPosition(5);
+        moveWobbleForward(RETRACTED, "RETRACTED");
 
         //TODO: Start shooter motor
-        //StartShooter();
+        StartShooter();
 
         //TODO: Drive to shooting position
+        ForwardUntilAtTargetPosition(11.5);
 
         //TODO: Exit this method
     }
 
     private void DriveToA() {
-        //TODO: Straff to the corner
+        //TODO: Start shooter motor
+        StartShooter();
+
+        //ForwardUntilAtTargetPosition(55);
+        //TODO: Strafe to the corner
+        //StrafeUntilTimerReached(StrafeDirection.Right, 0.4, 3000);
+        //rotate(18, 0.4);
 
         //TODO: Drive for distance to the A dropoff point
+        //ForwardUntilAtTargetPosition(49);
 
-        //TODO: Drop off wobble goal
+//        TODO: Drop off wobble goal
+        //moveWobbleForward(OUT, "OUT");
+//        BackwardUntilAtTargetPosition(5);
+//        sleep(200);
+//        moveWobbleForward(RETRACTED, "RETRACTED");
 
-        //TODO: Start shooter motor
-        //StartShooter();
 
         //TODO: Drive to shooting position
+//        rotate(90, 0.4);
+//        ForwardUntilAtTargetPosition(24);
+//        rotate(-90, 0.4);
+//        ForwardUntilAtTargetPosition(12);
+//        rotate(20, 0.4);
+//        rotate(45, 0.4);
+        //ForwardUntilAtTargetPosition(9);
+        //rotate(15, 0.4);
 
         //TODO: Exit this method
     }
@@ -376,6 +440,8 @@ public class Auto01 extends LinearOpMode {
         odometerBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         odometerWobble.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        odometerWobble.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
         leftCurrentPosition = odometerLeft.getCurrentPosition();
         rightCurrentPosition = odometerRight.getCurrentPosition();
         backCurrentPosition = odometerBack.getCurrentPosition();
@@ -441,14 +507,19 @@ public class Auto01 extends LinearOpMode {
         telemetry.update();
     }
 
-    private  void StartShooter(){
+    private void StartShooter() {
         // Start Shooter
         OuttakeOn();
-        waitForTime(5000, "Charging Shooter...");
+        //waitForTime(3500, "Charging Shooter...");
     }
-    public void PushRing() { pusher.setPosition(PUSHER_OUT); }
 
-    public void PushReset() { pusher.setPosition(PUSHER_IN); }
+    public void PushRing() {
+        pusher.setPosition(PUSHER_OUT);
+    }
+
+    public void PushReset() {
+        pusher.setPosition(PUSHER_IN);
+    }
 
     public void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
@@ -464,7 +535,7 @@ public class Auto01 extends LinearOpMode {
         PushRing();
         waitForTime(300, "Shooting Ring");
         PushReset();
-        waitForTime(1000, "Resetting shooter");
+        waitForTime(1500, "Resetting shooter");
     }
 
     private void waitForTime(int mills, String caption) {
@@ -543,7 +614,7 @@ public class Auto01 extends LinearOpMode {
         }
 
         odometerWobble.setPower(0);
-        waitForTime(3000, "Finished " + caption);
+        //waitForTime(3000, "Finished " + caption);
     }
 
 //    private void moveWobbleBackward(int position) {
@@ -1005,7 +1076,7 @@ public class Auto01 extends LinearOpMode {
             // Call StrafeMotorControl with new speed
 
             if (strafeDirection == StrafeDirection.Left) {
-                ProMotorControl(-0.1, -power, 0.0);
+                ProMotorControl(-0.0, -power, 0.0);
             } else if (strafeDirection == StrafeDirection.Right) {
                 ProMotorControl(-0.1, power, 0.0);
             } else {
