@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.christian;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -12,6 +13,7 @@ import org.firstinspires.ftc.robotcore.internal.android.dx.dex.code.SwitchData;
 
 import java.util.List;
 
+@Disabled
 @TeleOp(name = "Concept: TensorFlow Object Detection", group = "Concept")
 public class FindRings extends LinearOpMode {
     private static final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";

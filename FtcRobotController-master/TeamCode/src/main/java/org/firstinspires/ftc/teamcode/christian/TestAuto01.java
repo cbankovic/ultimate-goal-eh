@@ -28,7 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 
-//@Disabled
+@Disabled
 @Autonomous(name = "McTest Vision Auto", group = "Testing")
 public class TestAuto01 extends LinearOpMode {
 

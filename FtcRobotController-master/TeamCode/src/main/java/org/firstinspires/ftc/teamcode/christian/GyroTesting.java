@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.christian;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -17,6 +18,7 @@ import org.firstinspires.ftc.teamcode.comp.PIDController;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
+@Disabled
 @Autonomous(name = "GyroTest", group = "Christian")
 public class GyroTesting  extends LinearOpMode {
 
