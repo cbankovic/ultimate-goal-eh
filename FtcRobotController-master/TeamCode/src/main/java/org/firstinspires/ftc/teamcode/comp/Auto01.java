@@ -44,7 +44,7 @@ public class Auto01 extends LinearOpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.65;
+    private double OuttakeFrontPower = 0.62;
     private double OuttakeBackPower = 1;
 
     // Encoders
@@ -70,13 +70,12 @@ public class Auto01 extends LinearOpMode {
     private double WOBBLE_POWER = 0.50;
 
     // Servos
-//    private Servo ServoLeft;
-//    private Servo ServoRight;
-//    private double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
-//    private int CYCLE_MS = 50;     // period of each cycle
-//    private double MAX_POS = 1.0;     // Maximum rotational position
-//    private double MIN_POS = 0.0;     // Minimum rotational position
-//    private double position = 0.0;
+    private Servo ServoLeft;
+    private double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
+    private int CYCLE_MS = 50;     // period of each cycle
+    private double MAX_POS = 1.0;     // Maximum rotational position
+    private double MIN_POS = 0.0;     // Minimum rotational position
+    private double position = 0.0;
 
     // A timer helps provide feedback while calibration is taking place
     ElapsedTime timer = new ElapsedTime();
@@ -125,12 +124,17 @@ public class Auto01 extends LinearOpMode {
         NotFound
     }
 
+    private Boolean ShootBit = true;
+    private Boolean WobbleBit = true;
+    private Boolean VisionBit = false;
+
     /**************
      *** SCRIPT ***
      **************/
 
     @Override
     public void runOpMode() throws InterruptedException {
+        RingsFound ringLocation = RingsFound.NotFound;
 
         Initialize();
 
@@ -139,7 +143,9 @@ public class Auto01 extends LinearOpMode {
         SetPIDForward();
 
         // TODO: uncomment to wait for the camera to activate
-        //sleep(3000);
+        if (VisionBit)
+            sleep(3000);
+
         telemetry.addData("=D", "Ready to start!");
         telemetry.update();
 
@@ -152,10 +158,11 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
-                // TODO: uncomment
-                //RingsFound ringLocation = FindRings();
-                // TODO: delete line - TESTING ONLY
-                RingsFound ringLocation = RingsFound.Single;
+                if (VisionBit) {
+                    ringLocation = FindRings();
+                } else {
+                    ringLocation = RingsFound.Quad;
+                }
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
@@ -181,10 +188,12 @@ public class Auto01 extends LinearOpMode {
                         break;
                 }
 
-                ShootRing();
-                ShootRing();
-                ShootRing();
-                OuttakeStop();
+                if (ShootBit) {
+                    ShootRing();
+                    ShootRing();
+                    ShootRing();
+                    OuttakeStop();
+                }
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
@@ -236,7 +245,7 @@ public class Auto01 extends LinearOpMode {
         rotate(-20, 0.4);
 
         // Drive past the ring stack
-        ForwardUntilAtTargetPosition(50);
+        ForwardUntilAtTargetPosition(45);
 
         // Rotate to drive to the C target zone
         rotate(20, 0.4);
@@ -265,14 +274,17 @@ public class Auto01 extends LinearOpMode {
         rotate(-20, 0.4);
 
         // Drive past the ring stack
-        ForwardUntilAtTargetPosition(50);
+        ForwardUntilAtTargetPosition(45);
+
+        // Start shooter motor
+        StartShooter();
 
         // Rotate towards target zone B
         rotate(30, 0.4);
         rotate(25, 0.4);
 
         // Drive to target zone B
-        ForwardUntilAtTargetPosition(20);
+        ForwardUntilAtTargetPosition(30);
 
         // Place wobble goal
         PlaceWobbleGoal();
@@ -281,15 +293,17 @@ public class Auto01 extends LinearOpMode {
         rotate(-30, 0.4);
         rotate(-30, 0.4);
 
-        // Start shooter motor
-        StartShooter();
-
         // Drive to the shooting location
         BackwardUntilAtTargetPosition(17);
 
+//        // Start shooter motor
+//        StartShooter();
+//
+//        waitForTime(1300, "Waiting for shooter");
+
         // Rotate robot to shoot in the high goal
         rotate(30, 0.5);
-        rotate(18, 0.5);
+        rotate(14, 0.5);
     }
 
     private void DriveToA() {
@@ -304,9 +318,11 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void PlaceWobbleGoal() {
-        moveWobbleForward(OUT, "OUT");
-        sleep(200);
-        moveWobbleForward(RETRACTED, "RETRACTED");
+        if (WobbleBit) {
+            moveWobbleForward(OUT, "OUT");
+            sleep(200);
+            moveWobbleForward(RETRACTED, "RETRACTED");
+        }
     }
 
 
@@ -421,6 +437,11 @@ public class Auto01 extends LinearOpMode {
         backCurrentPosition = odometerBack.getCurrentPosition();
         wobbleCurrentPosition = odometerWobble.getCurrentPosition();
 
+
+        ServoLeft = hardwareMap.get(Servo.class, "Intake");
+        ServoLeft.setPosition((1 - position));
+
+
         // Initialize IMU
         modernRoboticsI2cGyro = hardwareMap.get(ModernRoboticsI2cGyro.class, "gyro");
         gyro = (IntegratingGyroscope) modernRoboticsI2cGyro;
@@ -450,23 +471,25 @@ public class Auto01 extends LinearOpMode {
         }
         resetAngle();
 
-        // Initialize Vision Software
-        initVuforia();
-        initTfod();
+        if (VisionBit) {
+            // Initialize Vision Software
+            initVuforia();
+            initTfod();
 
-        if (tfod != null) {
-            TurnOnCamera();
+            if (tfod != null) {
+                TurnOnCamera();
 
-            // The TensorFlow software will scale the input images from the camera to a lower resolution.
-            // This can result in lower detection accuracy at longer distances (> 55cm or 22").
-            // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
-            // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
-            // should be set to the value of the images used to create the TensorFlow Object Detection model
-            // (typically 1.78 or 16/9).
+                // The TensorFlow software will scale the input images from the camera to a lower resolution.
+                // This can result in lower detection accuracy at longer distances (> 55cm or 22").
+                // If your target is at distance greater than 50 cm (20") you can adjust the magnification value
+                // to artificially zoom in to the center of image.  For best results, the "aspectRatio" argument
+                // should be set to the value of the images used to create the TensorFlow Object Detection model
+                // (typically 1.78 or 16/9).
 
-            // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
-            tfod.setZoom(2.5, 1.7777);
-            //tfod.setClippingMargins(350, 150, 350, 200);
+                // Uncomment the following line if you want to adjust the magnification and/or the aspect ratio of the input images.
+                tfod.setZoom(2.5, 1.7777);
+                //tfod.setClippingMargins(350, 150, 350, 200);
+            }
         }
 
         telemetry.addData("Status", "Initializing camera");
@@ -474,9 +497,11 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void StartShooter() {
-        // Start Shooter
-        OuttakeOn();
-        //waitForTime(3500, "Charging Shooter...");
+        if (ShootBit) {
+            // Start Shooter
+            OuttakeOn();
+            //waitForTime(3500, "Charging Shooter...");
+        }
     }
 
     public void PushRing() {
@@ -499,7 +524,7 @@ public class Auto01 extends LinearOpMode {
 
     private void ShootRing() {
         PushRing();
-        waitForTime(300, "Shooting Ring");
+        waitForTime(500, "Shooting Ring");
         PushReset();
         waitForTime(1000, "Resetting shooter");
     }
@@ -831,54 +856,50 @@ public class Auto01 extends LinearOpMode {
         WheelBackRight.setPower(right_stick_y);
     }
 
-//    private void CloseFoundationHook() {
-//
-//        telemetry.clear();
-//        telemetry.addData("Servo", "Getting to starting position...");
-//        telemetry.update();
-//
-//        while (ServoLeft.getPosition() != MAX_POS || ServoRight.getPosition() != MIN_POS) {
-//
-//            if (!opModeIsActive()) {
-//                break;
-//            }
-//
-//            telemetry.addData("L Servo", ServoLeft.getPosition());
-//            telemetry.addData("R Servo", ServoRight.getPosition());
-//
-//            position += INCREMENT;
-//            ServoLeft.setPosition(position);
-//            ServoRight.setPosition(1 - position);
-//            sleep(CYCLE_MS);
-//            idle();
-//            telemetry.update();
-//        }
-//    }
+    private void IntakeRetract() {
 
-//    private void OpenFoundationHook() {
-//
-//        telemetry.clear();
-//        telemetry.addData("Servo", "Getting to starting position...");
-//        telemetry.update();
-//
-//        while (ServoLeft.getPosition() != MIN_POS || ServoRight.getPosition() != MAX_POS) {
-//
-//            if (!opModeIsActive()) {
-//                break;
-//            }
-//
-//            telemetry.addData("L Servo", ServoLeft.getPosition());
-//            telemetry.addData("R Servo", ServoRight.getPosition());
-//
-//            // Keep stepping down until we hit the min value.
-//            position += INCREMENT;
-//            ServoLeft.setPosition(1 - position);
-//            ServoRight.setPosition(position);
-//            sleep(CYCLE_MS);
-//            idle();
-//            telemetry.update();
-//        }
-//    }
+        telemetry.clear();
+        telemetry.addData("Servo", "Getting to starting position...");
+        telemetry.update();
+
+        while (ServoLeft.getPosition() != MAX_POS) {
+
+            if (!opModeIsActive()) {
+                break;
+            }
+
+            telemetry.addData("L Servo", ServoLeft.getPosition());
+
+            position += INCREMENT;
+            ServoLeft.setPosition(position);
+            sleep(CYCLE_MS);
+            idle();
+            telemetry.update();
+        }
+    }
+
+    private void IntakeExtend() {
+
+        telemetry.clear();
+        telemetry.addData("Servo", "Getting to starting position...");
+        telemetry.update();
+
+        while (ServoLeft.getPosition() != MIN_POS) {
+
+            if (!opModeIsActive()) {
+                break;
+            }
+
+            telemetry.addData("L Servo", ServoLeft.getPosition());
+
+            // Keep stepping down until we hit the min value.
+            position += INCREMENT;
+            ServoLeft.setPosition(1 - position);
+            sleep(CYCLE_MS);
+            idle();
+            telemetry.update();
+        }
+    }
 
     /**
      * Rotate left or right the number of degrees. Does not support turning more than 359 degrees.
@@ -1135,17 +1156,18 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void TurnOffCamera() {
-        if (tfod != null) {
-            tfod.shutdown();
-            vuforia.getCamera().close();
+        if (VisionBit) {
+            if (tfod != null) {
+                tfod.shutdown();
+                vuforia.getCamera().close();
+            }
         }
     }
 
     private RingsFound FindRings() {
         // getUpdatedRecognitions() will return null if no new information is available since
         // the last time that call was made.
-//        Boolean allDone = false;
-//
+
         RingsFound returnRings = RingsFound.None;
 
         ElapsedTime timer = new ElapsedTime();

@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "New TeleOp 2020", group = "Competition")
 public class TeleOp01 extends OpMode {
@@ -28,7 +29,7 @@ public class TeleOp01 extends OpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.6;
+    private double OuttakeFrontPower = 0.62;
     private double OuttakeBackPower = 1;
     private int k = 0;
     private int j = 0;
@@ -39,6 +40,17 @@ public class TeleOp01 extends OpMode {
 
     // Intake
     private DcMotor Intake;
+
+    // Servos
+    private Servo ServoLeft;
+    private double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
+    private int CYCLE_MS = 50;     // period of each cycle
+    private double MAX_POS = 1.0;     // Maximum rotational position
+    private double MIN_POS = 0.0;     // Minimum rotational position
+    private double position = 0.0;
+
+    // A timer helps provide feedback while calibration is taking place
+    ElapsedTime timer = new ElapsedTime();
 
 
     @Override
@@ -105,11 +117,17 @@ public class TeleOp01 extends OpMode {
 //        Intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //        Intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
+        ServoLeft = hardwareMap.get(Servo.class, "Intake");
+        ServoLeft.setPosition(position);
+
     }
 
     boolean firstClickSlow = true;
     boolean firstClickReverse = true;
     boolean reverseIsOn = false;
+    boolean firstClickRamp = true;
+    boolean rampeUp = true;
 
     @Override
     public void loop() {
@@ -128,6 +146,7 @@ public class TeleOp01 extends OpMode {
         boolean one_bumper_left = gamepad1.left_bumper;
         boolean one_bumper_right = gamepad1.right_bumper;
 
+
         // **Gamepad 2** \\
         // Wobble Grabber Controls
         float two_right_stick_y = gamepad2.right_stick_y;
@@ -141,6 +160,9 @@ public class TeleOp01 extends OpMode {
 
         try {
 
+            // TODO: Make the intake the front of the robot for driving
+            // TODO: make the robot intake go up and down via slowly
+            
 //            // Reverse Mode controls
 //            if (one_bumper_right && firstClickReverse){
 //                reverseMode = !reverseMode;
@@ -166,21 +188,25 @@ public class TeleOp01 extends OpMode {
 
 
             // Slow Mode controls
-            if (one_bumper_left && firstClickSlow){
-                slowMode = !slowMode;
-                firstClickSlow = false;
+            if (one_bumper_left && firstClickRamp){
+                rampeUp = !rampeUp;
+                firstClickRamp = false;
             }
 
             if (!one_bumper_left){
-                firstClickSlow = true;
+                firstClickRamp = true;
             }
 
             // Tell if Slow Mode is engaged
-            if (slowMode) {
+            if (rampeUp) {
+                IntakeExtend();
                 telemetry.addData("SLOW MODE", "ENGAGED");
             } else {
+                IntakeRetract();
                 telemetry.addData("SLOW MODE", "DISENGAGED");
             }
+
+
 
             // Drive Code
             ProMotorControl(one_right_stick_y, -one_right_stick_x, -one_left_stick_x);
@@ -327,4 +353,67 @@ public class TeleOp01 extends OpMode {
     private void GrabWobble() {}
 
     private void DropWobble() {}
+
+    private void IntakeRetract() {
+
+        telemetry.clear();
+        telemetry.addData("Servo", "Getting to starting position...");
+        telemetry.update();
+
+        while (ServoLeft.getPosition() != MAX_POS) {
+
+            telemetry.addData("L Servo", ServoLeft.getPosition());
+
+            position += INCREMENT;
+            ServoLeft.setPosition(position);
+            waitForTime(CYCLE_MS, "Waiting for the servo");
+            telemetry.update();
+        }
+    }
+
+    private void IntakeExtend() {
+
+        telemetry.clear();
+        telemetry.addData("Servo", "Getting to starting position...");
+        telemetry.update();
+
+        while (ServoLeft.getPosition() != MIN_POS) {
+
+            telemetry.addData("L Servo", ServoLeft.getPosition());
+
+            // Keep stepping down until we hit the min value.
+            position += INCREMENT;
+            ServoLeft.setPosition(1 - position);
+            waitForTime(CYCLE_MS, "Waiting for the servo");
+            telemetry.update();
+        }
+    }
+
+    private void ProServoControl(boolean rampUp) {
+        if (rampUp) {
+            // Keep stepping up until we hit the max value.
+            position += INCREMENT;
+            if (position >= MAX_POS) {
+                position = MAX_POS;
+            }
+        } else {
+            // Keep stepping down until we hit the min value.
+            position -= INCREMENT;
+            if (position <= MIN_POS) {
+                position = MIN_POS;
+            }
+        }
+        ServoLeft.setPosition((1 - position));
+    }
+
+    private void waitForTime(int mills, String caption) {
+        timer.reset();
+//        telemetry.addData("W", caption);
+//        telemetry.update();
+        // Wait until the shooter charges up
+        while (timer.milliseconds() < mills) {
+            // Do nothing
+        }
+    }
+
 }
