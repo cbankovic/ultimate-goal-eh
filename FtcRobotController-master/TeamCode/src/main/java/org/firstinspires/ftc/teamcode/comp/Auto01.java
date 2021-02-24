@@ -126,7 +126,8 @@ public class Auto01 extends LinearOpMode {
 
     private Boolean ShootBit = true;
     private Boolean WobbleBit = true;
-    private Boolean VisionBit = false;
+    private Boolean VisionBit = true;
+    private Boolean IsVerbose = false;
 
     /**************
      *** SCRIPT ***
@@ -161,21 +162,24 @@ public class Auto01 extends LinearOpMode {
                 if (VisionBit) {
                     ringLocation = FindRings();
                 } else {
-                    ringLocation = RingsFound.Quad;
+                    ringLocation = RingsFound.None;
                 }
 
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
                     case None:
                         telemetry.addData("Rings found: ", "None");
+                        telemetry.update();
                         DriveToA();
                         break;
                     case Single:
                         telemetry.addData("Rings found: ", "Single");
+                        telemetry.update();
                         DriveToB();
                         break;
                     case Quad:
                         telemetry.addData("Rings found: ", "Quad");
+                        telemetry.update();
                         DriveToC();
                         break;
                     default:
@@ -245,7 +249,7 @@ public class Auto01 extends LinearOpMode {
         rotate(-20, 0.4);
 
         // Drive past the ring stack
-        ForwardUntilAtTargetPosition(45);
+        ForwardUntilAtTargetPosition(50);
 
         // Rotate to drive to the C target zone
         rotate(20, 0.4);
@@ -266,25 +270,42 @@ public class Auto01 extends LinearOpMode {
         rotate(18, 0.4);
     }
 
+    private void TelemetryTest(String caption, String value, int mills){
+        if (IsVerbose){
+            telemetry.addData(caption, value);
+            telemetry.update();
+            sleep(mills);
+        }
+    }
+
     private void DriveToB() {
+
+        TelemetryTest("B", "DriveToB", 2000);
+
         // Drive for distance before rotating
         ForwardUntilAtTargetPosition(5);
+
+        TelemetryTest("B", "After 5, before rotate", 2000);
 
         // Rotate to get around the ring stack
         rotate(-20, 0.4);
 
+        TelemetryTest("B", "After rotate, before 45", 2000);
+
         // Drive past the ring stack
         ForwardUntilAtTargetPosition(45);
+
+        TelemetryTest("B", "After 45, before start shooter", 2000);
 
         // Start shooter motor
         StartShooter();
 
         // Rotate towards target zone B
         rotate(30, 0.4);
-        rotate(25, 0.4);
+        rotate(28, 0.4);
 
         // Drive to target zone B
-        ForwardUntilAtTargetPosition(30);
+        ForwardUntilAtTargetPosition(27);
 
         // Place wobble goal
         PlaceWobbleGoal();
@@ -294,7 +315,7 @@ public class Auto01 extends LinearOpMode {
         rotate(-30, 0.4);
 
         // Drive to the shooting location
-        BackwardUntilAtTargetPosition(17);
+        BackwardUntilAtTargetPosition(20);
 
 //        // Start shooter motor
 //        StartShooter();
@@ -303,7 +324,7 @@ public class Auto01 extends LinearOpMode {
 
         // Rotate robot to shoot in the high goal
         rotate(30, 0.5);
-        rotate(14, 0.5);
+        rotate(12, 0.5);
     }
 
     private void DriveToA() {
@@ -382,10 +403,10 @@ public class Auto01 extends LinearOpMode {
         WheelBackLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WheelBackRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        WheelFrontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        WheelFrontRight.setDirection(DcMotorSimple.Direction.FORWARD);
-        WheelBackLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        WheelBackRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        WheelFrontLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        WheelFrontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        WheelBackLeft.setDirection(DcMotorSimple.Direction.FORWARD);
+        WheelBackRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         WheelFrontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         WheelFrontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -437,10 +458,8 @@ public class Auto01 extends LinearOpMode {
         backCurrentPosition = odometerBack.getCurrentPosition();
         wobbleCurrentPosition = odometerWobble.getCurrentPosition();
 
-
         ServoLeft = hardwareMap.get(Servo.class, "Intake");
-        ServoLeft.setPosition((1 - position));
-
+        ServoLeft.setPosition(0);
 
         // Initialize IMU
         modernRoboticsI2cGyro = hardwareMap.get(ModernRoboticsI2cGyro.class, "gyro");
@@ -680,13 +699,13 @@ public class Auto01 extends LinearOpMode {
             power += correction;
         }
 
-        telemetry.addData("LT", "Power Sub    : " + (power - correction));
-        telemetry.addData("LT", "Power Add    : " + (power + correction));
+        telemetry.addData("LT", "Power Sub    : " + (power + correction));
+        telemetry.addData("LT", "Power Add    : " + (power - correction));
 
-        WheelFrontLeft.setPower(power - correction);
-        WheelFrontRight.setPower(power + correction);
-        WheelBackLeft.setPower(power - correction);
-        WheelBackRight.setPower(power + correction);
+        WheelFrontLeft.setPower(power + correction);
+        WheelFrontRight.setPower(power - correction);
+        WheelBackLeft.setPower(power + correction);
+        WheelBackRight.setPower(power - correction);
     }
 
     private void DriveStraightBackwards() {
@@ -696,13 +715,13 @@ public class Auto01 extends LinearOpMode {
             power -= correction;
         }
 
-        telemetry.addData("LT", "Power Sub    : " + (power - correction));
-        telemetry.addData("LT", "Power Add    : " + (power + correction));
+        telemetry.addData("LT", "Power Sub    : " + (power + correction));
+        telemetry.addData("LT", "Power Add    : " + (power - correction));
 
-        WheelFrontLeft.setPower(power - correction);
-        WheelFrontRight.setPower(power + correction);
-        WheelBackLeft.setPower(power - correction);
-        WheelBackRight.setPower(power + correction);
+        WheelFrontLeft.setPower(power + correction);
+        WheelFrontRight.setPower(power - correction);
+        WheelBackLeft.setPower(power + correction);
+        WheelBackRight.setPower(power - correction);
     }
 
     private void ForwardUntilAtTargetPosition(double distanceInch) {
@@ -939,28 +958,28 @@ public class Auto01 extends LinearOpMode {
         if (degrees < 0) {
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0) {
-                WheelFrontLeft.setPower(power);
-                WheelBackLeft.setPower(power);
-                WheelFrontRight.setPower(-power);
-                WheelBackRight.setPower(-power);
+                WheelFrontLeft.setPower(-power);
+                WheelBackLeft.setPower(-power);
+                WheelFrontRight.setPower(power);
+                WheelBackRight.setPower(power);
                 sleep(100);
             }
 
             do {
                 power = pidRotate.performPID(getAngle()); // power will be - on right turn.
-                WheelFrontLeft.setPower(-power);
-                WheelBackLeft.setPower(-power);
-                WheelFrontRight.setPower(power);
-                WheelBackRight.setPower(power);
+                WheelFrontLeft.setPower(power);
+                WheelBackLeft.setPower(power);
+                WheelFrontRight.setPower(-power);
+                WheelBackRight.setPower(-power);
             } while (opModeIsActive() && !pidRotate.onTarget());
         } else    // left turn.
             do {
                 IMUStuff();
                 power = pidRotate.performPID(getAngle()); // power will be + on left turn.
-                WheelFrontLeft.setPower(-power);
-                WheelBackLeft.setPower(-power);
-                WheelFrontRight.setPower(power);
-                WheelBackRight.setPower(power);
+                WheelFrontLeft.setPower(power);
+                WheelBackLeft.setPower(power);
+                WheelFrontRight.setPower(-power);
+                WheelBackRight.setPower(-power);
             } while (opModeIsActive() && !pidRotate.onTarget());
 
         // turn the motors off.
@@ -1215,6 +1234,10 @@ public class Auto01 extends LinearOpMode {
                 break;
             //sleep(2000);
         }
+
+//        telemetry.addData("Ring Found: ", returnRings.name());
+//        telemetry.update();
+//        sleep(3000);
 
         return returnRings;
 //        return null;
