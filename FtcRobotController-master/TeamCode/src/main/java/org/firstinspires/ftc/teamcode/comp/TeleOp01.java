@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.comp;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -21,6 +20,7 @@ public class TeleOp01 extends OpMode {
 
     private boolean slowMode = false;
     private boolean reverseMode = false;
+    private boolean rampUp = true;
     private double PERCENT_TO_SLOW = 0.5;
 
     // Shooter Motors
@@ -39,15 +39,15 @@ public class TeleOp01 extends OpMode {
     float PERCENT_TO_DIVIDE = -0.5f;
 
     // Intake
-    private DcMotor Intake;
+    private Servo Intake;
+    private double PRO_INCREMENT = 0.003;  // amount to slew servo each CYCLE_MS cycle
+    private double INCREMENT = 0.1;         // amount to slew servo each CYCLE_MS cycle
+    private int CYCLE_MS = 50;              // period of each cycle
+    private double MAX_POS = 1.0;           // Maximum rotational position
+    private double MIN_POS = 0.0;           // Minimum rotational position
+    private double position = 0.0;          // Position to set servo
 
-    // Servos
-    private Servo ServoLeft;
-    private double INCREMENT = 0.1;     // amount to slew servo each CYCLE_MS cycle
-    private int CYCLE_MS = 50;     // period of each cycle
-    private double MAX_POS = 1.0;     // Maximum rotational position
-    private double MIN_POS = 0.0;     // Minimum rotational position
-    private double position = 0.0;
+
 
     // A timer helps provide feedback while calibration is taking place
     ElapsedTime timer = new ElapsedTime();
@@ -93,7 +93,7 @@ public class TeleOp01 extends OpMode {
         OuttakeFront.setPower(0);
         OuttakeFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         OuttakeFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE); // TODO: Test shooter motors on FLOAT
+        OuttakeFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         // Initialize pusher
         pusher = hardwareMap.get(Servo.class, "Pusher");
@@ -108,26 +108,14 @@ public class TeleOp01 extends OpMode {
         WobbleGrabber.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WobbleGrabber.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-//        // TODO: Need to hook up the 2nd expansion hub before we can update the phones config
-//        // Initialize Intake
-//        Intake = hardwareMap.dcMotor.get("Intake");
-//        Intake.setDirection(DcMotorSimple.Direction.FORWARD);
-//        Intake.setPower(0);
-//        Intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        Intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//        Intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-        ServoLeft = hardwareMap.get(Servo.class, "Intake");
-        ServoLeft.setPosition(position);
+        Intake = hardwareMap.get(Servo.class, "Intake");
+        Intake.setPosition(position);
 
     }
 
     boolean firstClickSlow = true;
     boolean firstClickReverse = true;
-    boolean reverseIsOn = false;
     boolean firstClickRamp = true;
-    boolean rampeUp = true;
 
     @Override
     public void loop() {
@@ -146,6 +134,10 @@ public class TeleOp01 extends OpMode {
         boolean one_bumper_left = gamepad1.left_bumper;
         boolean one_bumper_right = gamepad1.right_bumper;
 
+        // Triggers
+        float one_trigger_left = gamepad1.left_trigger;
+        float one_trigger_right = gamepad1.right_trigger;
+
 
         // **Gamepad 2** \\
         // Wobble Grabber Controls
@@ -162,34 +154,36 @@ public class TeleOp01 extends OpMode {
 
             // TODO: Make the intake the front of the robot for driving
             // TODO: make the robot intake go up and down via slowly
-            
-//            // Reverse Mode controls
-//            if (one_bumper_right && firstClickReverse){
-//                reverseMode = !reverseMode;
-//                firstClickReverse = false;
-//            }
-//
-//            if (!one_bumper_right){
-//                firstClickReverse = true;
-//            }
-//
-//            // Tell if Reverse Mose is engaged
-//            if (reverseMode) {
-//                telemetry.addData("REVERSE MODE", "ENGAGED");
-//                if (!reverseIsOn) {
-//                    one_right_stick_y *= -1;
-//                    one_right_stick_x *= -1;
-//                    reverseIsOn = true;
-//                }
-//            } else {
-//                telemetry.addData("REVERSE MODE", "DISENGAGED");
-//                reverseIsOn = false;
-//            }
+
+            // Reverse Mode controls
+            if (one_bumper_right && firstClickReverse){
+                reverseMode = !reverseMode;
+                firstClickReverse = false;
+            }
+
+            if (!one_bumper_right){
+                firstClickReverse = true;
+            }
+
+            telemetry.addData("Intake Position", position);
+
+            // Tell if Reverse Mode is engaged
+            if (reverseMode) {
+                telemetry.addData("REVERSE MODE", "ENGAGED");
+            } else {
+                telemetry.addData("REVERSE MODE", "DISENGAGED");
+            }
 
 
-            // Slow Mode controls
+            // Intake controls
             if (one_bumper_left && firstClickRamp){
-                rampeUp = !rampeUp;
+                rampUp = !rampUp;
+                // Retract/Extend Intake
+                if (rampUp) {
+                    IntakeExtend();
+                } else {
+                    IntakeRetract();
+                }
                 firstClickRamp = false;
             }
 
@@ -197,12 +191,28 @@ public class TeleOp01 extends OpMode {
                 firstClickRamp = true;
             }
 
+            // Tell if the intake is extended or retracted
+            if (rampUp) {
+                telemetry.addData("Ramp", "EXTENDED");
+            } else {
+                telemetry.addData("Ramp", "RETRACTED");
+            }
+
+
+            // Slow Mode controls
+            if (one_button_a && firstClickSlow){
+                slowMode = !slowMode;
+                firstClickSlow = false;
+            }
+
+            if (!one_button_a){
+                firstClickSlow = true;
+            }
+
             // Tell if Slow Mode is engaged
-            if (rampeUp) {
-                IntakeExtend();
+            if (slowMode) {
                 telemetry.addData("SLOW MODE", "ENGAGED");
             } else {
-                IntakeRetract();
                 telemetry.addData("SLOW MODE", "DISENGAGED");
             }
 
@@ -214,40 +224,8 @@ public class TeleOp01 extends OpMode {
             telemetry.addData("Right_x: ", one_right_stick_x);
             telemetry.addData("Right_y: ", -one_right_stick_y);
 
-//            // Outtake Power Adjustment
-//            if (button_b) {
-//                if (k < 1 && j == 0) {          // 20% power
-//                    OuttakeFrontPower = 0.2;
-//                    j++;
-//                } else if (k < 1 && j == 1) {   // 30% power
-//                    OuttakeFrontPower = 0.3;
-//                    j++;
-//                } else if (k < 1 && j == 2) {   // 40% power
-//                    OuttakeFrontPower = 0.4;
-//                    j++;
-//                } else if (k < 1 && j == 3) {   // 50% power
-//                    OuttakeFrontPower = 0.5;
-//                    j++;
-//                } else if (k < 1 && j == 4) {   // 60% power
-//                    OuttakeFrontPower = 0.6;
-//                    j++;
-//                } else if (k < 1 && j == 5) {   // 70% power
-//                    OuttakeFrontPower = 0.7;
-//                    j++;
-//                } else if (k < 1 && j == 6) {   // 80% power
-//                    OuttakeFrontPower = 0.8;
-//                    j++;
-//                } else if (k < 1 && j == 7) {   // 90% power
-//                    OuttakeFrontPower = 0.9;
-//                    j++;
-//                } else if (k < 1 && j == 8) {   // 100% power
-//                    OuttakeFrontPower = 1;
-//                    j = 0;
-//                }
-//                k++;
-//            } else {
-//                k = 0;
-//            }
+            // Intake Code
+            ProServoControl(one_trigger_left, one_trigger_right);
 
             // Wobbly Boi Code
             MoveWobblyBoi(two_right_stick_y);
@@ -264,15 +242,11 @@ public class TeleOp01 extends OpMode {
             } else {
                 ResetPusher();
             }
-
-
         } catch (Exception ex){
             // Catching the exception
         } finally {
             telemetry.update();
         }
-
-
     }
 
 
@@ -286,6 +260,11 @@ public class TeleOp01 extends OpMode {
         float powerRightX = right_stick_x;
         float powerRightY = right_stick_y;
         float powerLeftX = left_stick_x;
+
+        if (reverseMode) {
+            powerRightX *= -1;
+            powerRightY *= -1;
+        }
 
         double r = Math.hypot(powerRightX, powerRightY);
         double robotAngle = Math.atan2(powerRightY, powerRightX) - Math.PI / 4;
@@ -330,10 +309,6 @@ public class TeleOp01 extends OpMode {
         pusher.setPosition(PUSHER_IN);
     }
 
-    private void IntakeStop() {}
-
-    private void IntakeStart() {}
-
     private void MoveWobblyBoi(float right_stick_y) {
         float armPower = right_stick_y * PERCENT_TO_DIVIDE;
 
@@ -348,24 +323,21 @@ public class TeleOp01 extends OpMode {
         telemetry.addData("Right Stick Y: ", right_stick_y);
     }
 
-    private void LiftWobble() {}
-
-    private void GrabWobble() {}
-
-    private void DropWobble() {}
-
     private void IntakeRetract() {
 
         telemetry.clear();
         telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
-        while (ServoLeft.getPosition() != MAX_POS) {
+        while (Intake.getPosition() != MAX_POS) {
 
-            telemetry.addData("L Servo", ServoLeft.getPosition());
+            telemetry.addData("L Servo", Intake.getPosition());
 
             position += INCREMENT;
-            ServoLeft.setPosition(position);
+            if (position >= MAX_POS) {
+                position = MAX_POS;
+            }
+            Intake.setPosition(position);
             waitForTime(CYCLE_MS, "Waiting for the servo");
             telemetry.update();
         }
@@ -377,39 +349,42 @@ public class TeleOp01 extends OpMode {
         telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
-        while (ServoLeft.getPosition() != MIN_POS) {
+        while (Intake.getPosition() != MIN_POS) {
 
-            telemetry.addData("L Servo", ServoLeft.getPosition());
+            telemetry.addData("L Servo", Intake.getPosition());
 
-            // Keep stepping down until we hit the min value.
-            position += INCREMENT;
-            ServoLeft.setPosition(1 - position);
-            waitForTime(CYCLE_MS, "Waiting for the servo");
-            telemetry.update();
-        }
-    }
-
-    private void ProServoControl(boolean rampUp) {
-        if (rampUp) {
-            // Keep stepping up until we hit the max value.
-            position += INCREMENT;
-            if (position >= MAX_POS) {
-                position = MAX_POS;
-            }
-        } else {
             // Keep stepping down until we hit the min value.
             position -= INCREMENT;
             if (position <= MIN_POS) {
                 position = MIN_POS;
             }
+            Intake.setPosition(position);
+            waitForTime(CYCLE_MS, "Waiting for the servo");
+            telemetry.update();
         }
-        ServoLeft.setPosition((1 - position));
+    }
+
+    private void ProServoControl(float left_trigger, float right_trigger) {
+        if (left_trigger > 0.01 || right_trigger > 0.01) {
+            if (left_trigger > 0.01) {
+                // Keep stepping up until we hit the max value.
+                position += PRO_INCREMENT;
+                if (position >= MAX_POS) {
+                    position = MAX_POS;
+                }
+            } else if (right_trigger > 0.01) {
+                // Keep stepping down until we hit the min value.
+                position -= PRO_INCREMENT;
+                if (position <= MIN_POS) {
+                    position = MIN_POS;
+                }
+            }
+            Intake.setPosition(position);
+        }
     }
 
     private void waitForTime(int mills, String caption) {
         timer.reset();
-//        telemetry.addData("W", caption);
-//        telemetry.update();
         // Wait until the shooter charges up
         while (timer.milliseconds() < mills) {
             // Do nothing
