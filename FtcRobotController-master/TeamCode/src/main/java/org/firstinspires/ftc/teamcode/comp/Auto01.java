@@ -364,9 +364,9 @@ public class Auto01 extends LinearOpMode {
     private void SetPIDForward() {
 
         // Set up parameters for driving in a straight line.
+        pidDrive.setInputRange(-90, 90);
         pidDrive.setSetpoint(0);
         pidDrive.setOutputRange(MIN_CORRECTION, MAX_CORRECTION);
-        pidDrive.setInputRange(-90, 90);
         pidDrive.setContinuous(true);
         pidDrive.enable();
     }
@@ -374,9 +374,9 @@ public class Auto01 extends LinearOpMode {
     private void SetPIDBackward() {
 
         // Set up parameters for driving in a straight line.
+        pidDrive.setInputRange(-90, 90);
         pidDrive.setSetpoint(0);
         pidDrive.setOutputRange(-MAX_CORRECTION, -MIN_CORRECTION);
-        pidDrive.setInputRange(-90, 90);
         pidDrive.setContinuous(true);
         pidDrive.enable();
     }
@@ -725,7 +725,6 @@ public class Auto01 extends LinearOpMode {
     }
 
     private void ForwardUntilAtTargetPosition(double distanceInch) {
-
         power = MAX_POWER;
 
         SetPIDForward();
