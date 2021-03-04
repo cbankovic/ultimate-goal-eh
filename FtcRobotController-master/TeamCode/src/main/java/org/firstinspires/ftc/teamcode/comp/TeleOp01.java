@@ -102,7 +102,7 @@ public class TeleOp01 extends OpMode {
 
         // Initialize Wobble Grabber
         WobbleGrabber = hardwareMap.dcMotor.get("Wobble Grabber");
-        WobbleGrabber.setDirection(DcMotorSimple.Direction.FORWARD);
+        WobbleGrabber.setDirection(DcMotorSimple.Direction.REVERSE);
         WobbleGrabber.setPower(0);
         WobbleGrabber.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         WobbleGrabber.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
