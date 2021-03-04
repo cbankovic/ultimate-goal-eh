@@ -10,7 +10,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 @TeleOp(name = "New TeleOp 2020", group = "Competition")
 public class TeleOp01 extends OpMode {
 
-    /** Declare Hardware **/
+    /**
+     * Declare Hardware
+     **/
 
     // Drive Motors
     private DcMotor WheelFrontLeft;
@@ -27,7 +29,7 @@ public class TeleOp01 extends OpMode {
     private DcMotor OuttakeFront;
     private Servo pusher;
     private double PUSHER_IN = 0.4;
-    private double PUSHER_OUT = 0;
+    private double PUSHER_OUT = 0.2;
 
     private double OuttakeFrontPower = 0.62;
     private double OuttakeBackPower = 1;
@@ -39,6 +41,8 @@ public class TeleOp01 extends OpMode {
     float PERCENT_TO_DIVIDE = -0.5f;
 
     // Intake
+    private DcMotor IntakeMotor;
+
     private Servo Intake;
     private double PRO_INCREMENT = 0.003;  // amount to slew servo each CYCLE_MS cycle
     private double INCREMENT = 0.1;         // amount to slew servo each CYCLE_MS cycle
@@ -46,7 +50,6 @@ public class TeleOp01 extends OpMode {
     private double MAX_POS = 1.0;           // Maximum rotational position
     private double MIN_POS = 0.0;           // Minimum rotational position
     private double position = 0.0;          // Position to set servo
-
 
 
     // A timer helps provide feedback while calibration is taking place
@@ -108,6 +111,14 @@ public class TeleOp01 extends OpMode {
         WobbleGrabber.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         WobbleGrabber.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Initialize Intake
+        IntakeMotor = hardwareMap.dcMotor.get("Intake Motor");
+        IntakeMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        IntakeMotor.setPower(0);
+        IntakeMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        IntakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        IntakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
         Intake = hardwareMap.get(Servo.class, "Intake");
         Intake.setPosition(position);
 
@@ -124,7 +135,7 @@ public class TeleOp01 extends OpMode {
         // Drive controls
         float one_right_stick_y = gamepad1.right_stick_y;
         float one_right_stick_x = gamepad1.right_stick_x;
-        float one_left_stick_x  = gamepad1.left_stick_x;
+        float one_left_stick_x = gamepad1.left_stick_x;
 
         // Buttons
         boolean one_button_a = gamepad1.a;
@@ -146,9 +157,14 @@ public class TeleOp01 extends OpMode {
         // Buttons
         boolean two_button_a = gamepad2.a;
         boolean two_button_b = gamepad2.b;
+        boolean two_button_x = gamepad2.x;
 
         // Bumpers
         boolean two_bumper_right = gamepad2.right_bumper;
+
+        // Triggers
+        float two_trigger_left = gamepad2.left_trigger;
+        float two_trigger_right = gamepad2.right_trigger;
 
         try {
 
@@ -156,12 +172,12 @@ public class TeleOp01 extends OpMode {
             // TODO: make the robot intake go up and down via slowly
 
             // Reverse Mode controls
-            if (one_bumper_right && firstClickReverse){
+            if (one_bumper_right && firstClickReverse) {
                 reverseMode = !reverseMode;
                 firstClickReverse = false;
             }
 
-            if (!one_bumper_right){
+            if (!one_bumper_right) {
                 firstClickReverse = true;
             }
 
@@ -176,7 +192,7 @@ public class TeleOp01 extends OpMode {
 
 
             // Intake controls
-            if (one_bumper_left && firstClickRamp){
+            if (one_bumper_left && firstClickRamp) {
                 rampUp = !rampUp;
                 // Retract/Extend Intake
                 if (rampUp) {
@@ -187,7 +203,7 @@ public class TeleOp01 extends OpMode {
                 firstClickRamp = false;
             }
 
-            if (!one_bumper_left){
+            if (!one_bumper_left) {
                 firstClickRamp = true;
             }
 
@@ -200,12 +216,12 @@ public class TeleOp01 extends OpMode {
 
 
             // Slow Mode controls
-            if (one_button_a && firstClickSlow){
+            if (one_button_a && firstClickSlow) {
                 slowMode = !slowMode;
                 firstClickSlow = false;
             }
 
-            if (!one_button_a){
+            if (!one_button_a) {
                 firstClickSlow = true;
             }
 
@@ -217,7 +233,6 @@ public class TeleOp01 extends OpMode {
             }
 
 
-
             // Drive Code
             ProMotorControl(one_right_stick_y, -one_right_stick_x, -one_left_stick_x);
             telemetry.addData("Left_ x: ", one_left_stick_x);
@@ -225,6 +240,7 @@ public class TeleOp01 extends OpMode {
             telemetry.addData("Right_y: ", -one_right_stick_y);
 
             // Intake Code
+            IntakeControl(two_trigger_left, two_trigger_right);
             ProServoControl(one_trigger_left, one_trigger_right);
 
             // Wobbly Boi Code
@@ -242,7 +258,7 @@ public class TeleOp01 extends OpMode {
             } else {
                 ResetPusher();
             }
-        } catch (Exception ex){
+        } catch (Exception ex) {
             // Catching the exception
         } finally {
             telemetry.update();
@@ -250,7 +266,9 @@ public class TeleOp01 extends OpMode {
     }
 
 
-    /** Methods **/
+    /**
+     * Methods
+     **/
 
     //https://ftcforum.usfirst.org/forum/ftc-technology/android-studio/6361-mecanum-wheels-drive-code-example
     //******************************************************************
@@ -380,6 +398,21 @@ public class TeleOp01 extends OpMode {
                 }
             }
             Intake.setPosition(position);
+        }
+    }
+
+    private void IntakeControl(float left_trigger, float right_trigger) {
+        if (left_trigger > 0.01) {
+            // Keep stepping up until we hit the max value.
+            IntakeMotor.setPower(left_trigger);
+            telemetry.addData("Intake Power", left_trigger);
+        } else if (right_trigger > 0.01) {
+            // Keep stepping up until we hit the max value.
+            IntakeMotor.setPower(-right_trigger);
+            telemetry.addData("Intake Power", -right_trigger);
+        } else {
+            IntakeMotor.setPower(0);
+            telemetry.addData("Intake Power", 0);
         }
     }
 
