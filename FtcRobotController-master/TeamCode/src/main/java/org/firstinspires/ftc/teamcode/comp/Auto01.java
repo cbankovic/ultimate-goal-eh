@@ -44,7 +44,7 @@ public class Auto01 extends LinearOpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.55;
+    private double OuttakeFrontPower = 0.53;
     private double OuttakeBackPower = 1;
 
     // Encoders
@@ -124,7 +124,7 @@ public class Auto01 extends LinearOpMode {
         NotFound
     }
 
-    private Boolean ShootBit = false;
+    private Boolean ShootBit = true;
     private Boolean WobbleBit = true;
     private Boolean VisionBit = false;
     private Boolean IsVerbose = false;
@@ -156,79 +156,79 @@ public class Auto01 extends LinearOpMode {
 
 
             // Drop off wobble goal
-            PlaceWobbleGoal();
+//            PlaceWobbleGoal();
 
-//            try {
-//                if (!opModeIsActive()) {
-//                    break;
-//                }
-//
-//                if (VisionBit) {
-//                    ringLocation = FindRings();
-//                } else {
-//                    ringLocation = RingsFound.None;
-//                }
-//
-//                // Detect the ring stack and drive to the appropriate target zone
-//                switch (ringLocation) {
-//                    case None:
-//                        telemetry.addData("Rings found: ", "None");
-//                        telemetry.update();
-//                        DriveToA();
-//                        break;
-//                    case Single:
-//                        telemetry.addData("Rings found: ", "Single");
-//                        telemetry.update();
-//                        DriveToB();
-//                        break;
-//                    case Quad:
-//                        telemetry.addData("Rings found: ", "Quad");
-//                        telemetry.update();
-//                        DriveToC();
-//                        break;
-//                    default:
-//                        telemetry.addData("Rings found: ", "NULL VALUE");
-//                        // Issue with vision - we randomly select target zone B
-//                        // May the odds forever be in your favor
-//                        // We have to navigate around the stack if there is one present
-//                        ringLocation = RingsFound.Single;
-//                        DriveToB();
-//                        break;
-//                }
-//
-//                if (ShootBit) {
-//                    ShootRing();
-//                    ShootRing();
-//                    ShootRing();
-//                    OuttakeStop();
-//                } else {
-//                    telemetry.addData("S", "Shooting");
-//                    telemetry.update();
-//                    sleep(3000);
-//                }
-//
-//                // Detect the ring stack and drive to the appropriate target zone
-//                switch (ringLocation) {
-//                    case None:
-//                        ForwardUntilAtTargetPosition(13);
-//                        break;
-//                    case Single:
-//                        ForwardUntilAtTargetPosition(15);
-//                        break;
-//                    case Quad:
-//                        ForwardUntilAtTargetPosition(12);
-//                        break;
-//                    default:
-//                        telemetry.addData("Rings found: ", "NULL VALUE");
-//                        break;
-//                }
-//            } catch (Exception ex) {
-//
-//                LoadExceptionData(ex, "while");
-//
-//            } finally {
-//                telemetry.update();
-//            }
+            try {
+                if (!opModeIsActive()) {
+                    break;
+                }
+
+                if (VisionBit) {
+                    ringLocation = FindRings();
+                } else {
+                    ringLocation = RingsFound.Quad;
+                }
+
+                // Detect the ring stack and drive to the appropriate target zone
+                switch (ringLocation) {
+                    case None:
+                        telemetry.addData("Rings found: ", "None");
+                        telemetry.update();
+                        DriveToA();
+                        break;
+                    case Single:
+                        telemetry.addData("Rings found: ", "Single");
+                        telemetry.update();
+                        DriveToB();
+                        break;
+                    case Quad:
+                        telemetry.addData("Rings found: ", "Quad");
+                        telemetry.update();
+                        DriveToC();
+                        break;
+                    default:
+                        telemetry.addData("Rings found: ", "NULL VALUE");
+                        // Issue with vision - we randomly select target zone B
+                        // May the odds forever be in your favor
+                        // We have to navigate around the stack if there is one present
+                        ringLocation = RingsFound.Single;
+                        DriveToB();
+                        break;
+                }
+
+                if (ShootBit) {
+                    ShootRing();
+                    ShootRing();
+                    ShootRing();
+                    OuttakeStop();
+                } else {
+                    telemetry.addData("S", "Shooting");
+                    telemetry.update();
+                    sleep(3000);
+                }
+
+                // Detect the ring stack and drive to the appropriate target zone
+                switch (ringLocation) {
+                    case None:
+                        ForwardUntilAtTargetPosition(25);
+                        break;
+                    case Single:
+                        ForwardUntilAtTargetPosition(15);
+                        break;
+                    case Quad:
+                        ForwardUntilAtTargetPosition(12);
+                        break;
+                    default:
+                        telemetry.addData("Rings found: ", "NULL VALUE");
+                        break;
+                }
+            } catch (Exception ex) {
+
+                LoadExceptionData(ex, "while");
+
+            } finally {
+                telemetry.update();
+            }
             break;
         }
 
@@ -250,7 +250,7 @@ public class Auto01 extends LinearOpMode {
         rotate(20, 0.4);
 
         // Drive to the target zone C
-        ForwardUntilAtTargetPosition(70);
+        ForwardUntilAtTargetPosition(75);
 
         // Drop off wobble goal
         PlaceWobbleGoal();
@@ -261,7 +261,8 @@ public class Auto01 extends LinearOpMode {
         // Drive to shooting position
         rotate(-20, 0.4);
         BackwardUntilAtTargetPosition(42);
-        rotate(45, 0.4);
+        rotate(20, 0.4);
+        rotate(5, 0.4);
     }
 
     private void TelemetryTest(String caption, String value, int mills) {
@@ -297,7 +298,7 @@ public class Auto01 extends LinearOpMode {
 
         // Rotate towards target zone B
         rotate(30, 0.4);
-        rotate(15, 0.4);
+        rotate(17, 0.4);
 
         // Drive to target zone B
         ForwardUntilAtTargetPosition(48);
@@ -307,12 +308,12 @@ public class Auto01 extends LinearOpMode {
 
         // Straighten robot to the goal
         rotate(-30, 0.4);
-        rotate(-5, 0.4);
+        rotate(-7, 0.4);
 
         // Drive to the shooting location
-        BackwardUntilAtTargetPosition(20);
+        BackwardUntilAtTargetPosition(12);
 
-        rotate(5, 0.4);
+        rotate(7, 0.4);
     }
 
     private void DriveToA() {
@@ -323,6 +324,9 @@ public class Auto01 extends LinearOpMode {
         // Rotate to drop the wobble goal
         rotate(-30, 0.4);
 
+        // Drive closer to the target zone
+        ForwardUntilAtTargetPosition(6);
+
         // Drop the wobble goal
         PlaceWobbleGoal();
 
@@ -330,7 +334,7 @@ public class Auto01 extends LinearOpMode {
         StartShooter();
 
         // Drive toward the shooting position
-        BackwardUntilAtTargetPosition(12);
+        BackwardUntilAtTargetPosition(18);
 
         // Rotate before shooting
         rotate(30, 0.5);

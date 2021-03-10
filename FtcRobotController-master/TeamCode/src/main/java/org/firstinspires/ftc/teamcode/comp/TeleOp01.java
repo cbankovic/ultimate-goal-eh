@@ -249,6 +249,8 @@ public class TeleOp01 extends OpMode {
             // Outtake Code
             if (two_button_a) {
                 OuttakeOn();
+            } else if (two_button_b) {
+                OuttakeReverse();
             } else {
                 OuttakeStop();
             }
@@ -309,13 +311,16 @@ public class TeleOp01 extends OpMode {
     // TODO: Code these functions
     private void OuttakeOn() {
         OuttakeFront.setPower(OuttakeFrontPower);
-        // TODO: push the ring into the shooter
         telemetry.addData("Outtake", "ON");
+    }
+
+    private void OuttakeReverse() {
+        OuttakeFront.setPower(-OuttakeFrontPower);
+        telemetry.addData("Outtake", "REVERSE");
     }
 
     private void OuttakeStop() {
         OuttakeFront.setPower(0);
-        // TODO: move the pusher out of the shooter
         telemetry.addData("Outtake", "OFF");
     }
 
