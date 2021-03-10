@@ -44,7 +44,7 @@ public class Auto01 extends LinearOpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0;
 
-    private double OuttakeFrontPower = 0.62;
+    private double OuttakeFrontPower = 0.55;
     private double OuttakeBackPower = 1;
 
     // Encoders
@@ -66,8 +66,8 @@ public class Auto01 extends LinearOpMode {
 
     // Wobbly Boi Positions
     private float COUNTS_PER_DEGREE = 3.11111111111f;
-    private float RETRACTED = 0, OUT = (80 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
-    private double WOBBLE_POWER = 0.50;
+    private float RETRACTED = 0, OUT = (145 * COUNTS_PER_DEGREE), RAISED = (135 * COUNTS_PER_DEGREE);
+    private double WOBBLE_POWER = 0.3;
 
     // Servos
     private Servo ServoLeft;
@@ -124,9 +124,9 @@ public class Auto01 extends LinearOpMode {
         NotFound
     }
 
-    private Boolean ShootBit = true;
+    private Boolean ShootBit = false;
     private Boolean WobbleBit = true;
-    private Boolean VisionBit = true;
+    private Boolean VisionBit = false;
     private Boolean IsVerbose = false;
 
     /**************
@@ -154,86 +154,81 @@ public class Auto01 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            try {
-                if (!opModeIsActive()) {
-                    break;
-                }
 
-                if (VisionBit) {
-                    ringLocation = FindRings();
-                } else {
-                    ringLocation = RingsFound.None;
-                }
+            // Drop off wobble goal
+            PlaceWobbleGoal();
 
-                // Detect the ring stack and drive to the appropriate target zone
-                switch (ringLocation) {
-                    case None:
-                        telemetry.addData("Rings found: ", "None");
-                        telemetry.update();
-                        DriveToA();
-                        break;
-                    case Single:
-                        telemetry.addData("Rings found: ", "Single");
-                        telemetry.update();
-                        DriveToB();
-                        break;
-                    case Quad:
-                        telemetry.addData("Rings found: ", "Quad");
-                        telemetry.update();
-                        DriveToC();
-                        break;
-                    default:
-                        telemetry.addData("Rings found: ", "NULL VALUE");
-                        // Issue with vision - we randomly select target zone B
-                        // May the odds forever be in your favor
-                        // We have to navigate around the stack if there is one present
-                        ringLocation = RingsFound.Single;
-                        DriveToB();
-                        break;
-                }
-
-                if (ShootBit) {
-                    ShootRing();
-                    ShootRing();
-                    ShootRing();
-                    OuttakeStop();
-                }
-
-                // Detect the ring stack and drive to the appropriate target zone
-                switch (ringLocation) {
-                    case None:
-                        // Rotate to drop the wobble goal
-                        rotate(-30, 0.4);
-                        rotate(-30, 0.4);
-
-                        // Drop the wobble goal
-                        PlaceWobbleGoal();
-
-                        // Rotate before parking on the line
-                        rotate(30, 0.5);
-                        ForwardUntilAtTargetPosition(18);
-                        break;
-                    case Single:
-                        // Rotate before parking on the line
-                        rotate(20, 0.5);
-                        ForwardUntilAtTargetPosition(18);
-                        break;
-                    case Quad:
-                        // Rotate before parking on the line
-                        rotate(20, 0.5);
-                        ForwardUntilAtTargetPosition(18);
-                        break;
-                    default:
-                        telemetry.addData("Rings found: ", "NULL VALUE");
-                        break;
-                }
-            } catch (Exception ex) {
-
-                LoadExceptionData(ex, "while");
-
-            } finally {
-                telemetry.update();
-            }
+//            try {
+//                if (!opModeIsActive()) {
+//                    break;
+//                }
+//
+//                if (VisionBit) {
+//                    ringLocation = FindRings();
+//                } else {
+//                    ringLocation = RingsFound.None;
+//                }
+//
+//                // Detect the ring stack and drive to the appropriate target zone
+//                switch (ringLocation) {
+//                    case None:
+//                        telemetry.addData("Rings found: ", "None");
+//                        telemetry.update();
+//                        DriveToA();
+//                        break;
+//                    case Single:
+//                        telemetry.addData("Rings found: ", "Single");
+//                        telemetry.update();
+//                        DriveToB();
+//                        break;
+//                    case Quad:
+//                        telemetry.addData("Rings found: ", "Quad");
+//                        telemetry.update();
+//                        DriveToC();
+//                        break;
+//                    default:
+//                        telemetry.addData("Rings found: ", "NULL VALUE");
+//                        // Issue with vision - we randomly select target zone B
+//                        // May the odds forever be in your favor
+//                        // We have to navigate around the stack if there is one present
+//                        ringLocation = RingsFound.Single;
+//                        DriveToB();
+//                        break;
+//                }
+//
+//                if (ShootBit) {
+//                    ShootRing();
+//                    ShootRing();
+//                    ShootRing();
+//                    OuttakeStop();
+//                } else {
+//                    telemetry.addData("S", "Shooting");
+//                    telemetry.update();
+//                    sleep(3000);
+//                }
+//
+//                // Detect the ring stack and drive to the appropriate target zone
+//                switch (ringLocation) {
+//                    case None:
+//                        ForwardUntilAtTargetPosition(13);
+//                        break;
+//                    case Single:
+//                        ForwardUntilAtTargetPosition(15);
+//                        break;
+//                    case Quad:
+//                        ForwardUntilAtTargetPosition(12);
+//                        break;
+//                    default:
+//                        telemetry.addData("Rings found: ", "NULL VALUE");
+//                        break;
+//                }
+//            } catch (Exception ex) {
+//
+//                LoadExceptionData(ex, "while");
+//
+//            } finally {
+//                telemetry.update();
+//            }
             break;
         }
 
@@ -242,20 +237,20 @@ public class Auto01 extends LinearOpMode {
 
     private void DriveToC() {
 
-        // Drive for distance to the C dropoff point
+        // Drive before rotating
         ForwardUntilAtTargetPosition(5);
 
         // Rotate to get around the ring stack
         rotate(-20, 0.4);
 
         // Drive past the ring stack
-        ForwardUntilAtTargetPosition(50);
+        ForwardUntilAtTargetPosition(27);
 
         // Rotate to drive to the C target zone
         rotate(20, 0.4);
 
-        // Drive to the target zone
-        ForwardUntilAtTargetPosition(45);
+        // Drive to the target zone C
+        ForwardUntilAtTargetPosition(70);
 
         // Drop off wobble goal
         PlaceWobbleGoal();
@@ -267,11 +262,10 @@ public class Auto01 extends LinearOpMode {
         rotate(-20, 0.4);
         BackwardUntilAtTargetPosition(42);
         rotate(45, 0.4);
-        rotate(18, 0.4);
     }
 
-    private void TelemetryTest(String caption, String value, int mills){
-        if (IsVerbose){
+    private void TelemetryTest(String caption, String value, int mills) {
+        if (IsVerbose) {
             telemetry.addData(caption, value);
             telemetry.update();
             sleep(mills);
@@ -280,69 +274,81 @@ public class Auto01 extends LinearOpMode {
 
     private void DriveToB() {
 
-        TelemetryTest("B", "DriveToB", 2000);
+        TelemetryTest("B", "DriveToB", 300);
 
         // Drive for distance before rotating
         ForwardUntilAtTargetPosition(5);
 
-        TelemetryTest("B", "After 5, before rotate", 2000);
+        TelemetryTest("B", "After 5, before rotate", 300);
 
         // Rotate to get around the ring stack
         rotate(-20, 0.4);
 
-        TelemetryTest("B", "After rotate, before 45", 2000);
+        TelemetryTest("B", "After rotate, before 45", 300);
 
         // Drive past the ring stack
-        ForwardUntilAtTargetPosition(45);
+        ForwardUntilAtTargetPosition(30); // Original - before changes
+        //ForwardUntilAtTargetPosition(28);
 
-        TelemetryTest("B", "After 45, before start shooter", 2000);
+        TelemetryTest("B", "After 45, before start shooter", 300);
 
         // Start shooter motor
         StartShooter();
 
         // Rotate towards target zone B
         rotate(30, 0.4);
-        rotate(28, 0.4);
+        rotate(15, 0.4);
 
         // Drive to target zone B
-        ForwardUntilAtTargetPosition(27);
+        ForwardUntilAtTargetPosition(48);
 
         // Place wobble goal
         PlaceWobbleGoal();
 
-        // Rotate to get around the ring stack
+        // Straighten robot to the goal
         rotate(-30, 0.4);
-        rotate(-30, 0.4);
+        rotate(-5, 0.4);
 
         // Drive to the shooting location
         BackwardUntilAtTargetPosition(20);
 
-//        // Start shooter motor
-//        StartShooter();
-//
-//        waitForTime(1300, "Waiting for shooter");
-
-        // Rotate robot to shoot in the high goal
-        rotate(30, 0.5);
-        rotate(12, 0.5);
+        rotate(5, 0.4);
     }
 
     private void DriveToA() {
-        // Turn on the shooter motor
+
+        // Drive to target zone A
+        ForwardUntilAtTargetPosition(60);
+
+        // Rotate to drop the wobble goal
+        rotate(-30, 0.4);
+
+        // Drop the wobble goal
+        PlaceWobbleGoal();
+
+        // Start shooter motor
         StartShooter();
 
-        // Drive to the shooting location
-        ForwardUntilAtTargetPosition(55);
+        // Drive toward the shooting position
+        BackwardUntilAtTargetPosition(12);
 
-        // Rotate robot to shoot in the high goal
-        rotate(18, 0.5);
+        // Rotate before shooting
+        rotate(30, 0.5);
+
+        // Drive toward the final shooting position
+        ForwardUntilAtTargetPosition(8);
     }
 
     private void PlaceWobbleGoal() {
         if (WobbleBit) {
             moveWobbleForward(OUT, "OUT");
-            sleep(200);
+            sleep(500);
+            BackwardUntilAtTargetPosition(5);
             moveWobbleForward(RETRACTED, "RETRACTED");
+        } else {
+            telemetry.addData("W", "Placing Wobble Goal");
+            telemetry.update();
+            sleep(1000);
         }
     }
 
@@ -727,57 +733,67 @@ public class Auto01 extends LinearOpMode {
     private void ForwardUntilAtTargetPosition(double distanceInch) {
         power = MAX_POWER;
 
+//        // Get Current position in ticks
+//        leftCurrentPosition = GetLeftPosition();
+
+        // Get Target position by adding current position and # of ticks to travel
+        leftTargetPosition = GetRightPosition() + calcDistance(distanceInch);
+
         SetPIDForward();
 
         DriveStraightForwards();
 
-        // Get Current position in ticks
-        leftCurrentPosition = GetLeftPosition();
-
-        // Get Target position by adding current position and # of ticks to travel
-        leftTargetPosition = leftCurrentPosition + calcDistance(distanceInch);
-
         telemetry.clearAll();
         telemetry.update();
 
+        IsVerbose = true;
+
         // Loop until we reach the target
-        while (leftCurrentPosition < leftTargetPosition && opModeIsActive()) {
-
-//            if (!opModeIsActive()) {
-//                break;
-//            }
-
-            //telemetry.addData("W", "Inside While Loop...");
-
-            // Recalculate the current position
-            leftCurrentPosition = GetLeftPosition();
-
+        while (GetRightPosition() < leftTargetPosition && opModeIsActive()) {
             DriveStraightForwards();
-
-            //telemetry.addData("CL", "Current Left: " + GetLeftPosition());
-            telemetry.addData("CL", "Current Left   : " + leftCurrentPosition);
-            telemetry.addData("TP", "Target Position: " + leftTargetPosition);
-            //IMUStuff();
-            //telemetry.addData("CR", "Current Right: " + GetRightPosition());
-            //telemetry.addData("CB", "Current Back: " + GetBackPosition());
-            //telemetry.addData("CL", "Current Left", +leftCurrentPosition);
-            //telemetry.addData("CR", "Current Right", +rightCurrentPosition);
-            //telemetry.addData("TL", "Target Left", +leftTargetPosition);
-            //telemetry.addData("TR", "Target Right", +rightTargetPosition);
-            //telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
-            //telemetry.addData("1 imu heading", lastAngles.firstAngle);
-            //telemetry.addData("2 global heading", globalAngle);
-            //telemetry.addData("correction", correction);
-            //telemetry.addData("getP", pidDrive.getP());
-            //telemetry.addData("getI", pidDrive.getI());
-            ////telemetry.addData("getD", pidDrive.getD());
-            //telemetry.addData("getError", pidDrive.getError());
-            //LoadTelemetryData();
-            telemetry.update();
+            if (IsVerbose) {
+                telemetry.addData("CL", "Current Right  : " + GetRightPosition());
+                telemetry.addData("TP", "Target Position: " + leftTargetPosition);
+                telemetry.update();
+            }
         }
+
+        IsVerbose = false;
         BasicMotorControl(0.0);
 
+        sleep(100);
     }
+//
+//    private void ForwardUntilAtTargetPosition(double distanceInch) {
+//        power = MAX_POWER;
+//
+////        // Get Current position in ticks
+////        leftCurrentPosition = GetLeftPosition();
+//
+//        // Get Target position by adding current position and # of ticks to travel
+//        leftTargetPosition = GetLeftPosition() + calcDistance(distanceInch);
+//
+//        SetPIDForward();
+//
+//        DriveStraightForwards();
+//
+//        telemetry.clearAll();
+//        telemetry.update();
+//
+//        // Loop until we reach the target
+//        while (GetLeftPosition() < leftTargetPosition && opModeIsActive()) {
+//            DriveStraightForwards();
+//            if (IsVerbose) {
+//                telemetry.addData("CL", "Current Left   : " + GetLeftPosition());
+//                telemetry.addData("TP", "Target Position: " + leftTargetPosition);
+//                telemetry.update();
+//            }
+//        }
+//
+//        BasicMotorControl(0.0);
+//
+//        sleep(100);
+//    }
 
     private int GetLeftPosition() {
         return odometerLeft.getCurrentPosition() * -1;
@@ -799,44 +815,77 @@ public class Auto01 extends LinearOpMode {
     private void BackwardUntilAtTargetPosition(double distanceInch) {
         power = MIN_POWER;
 
+        // Get Current position in ticks
+        leftCurrentPosition = GetRightPosition();
+
+        // Get Target position by adding current position and # of ticks to travel
+        leftTargetPosition = GetRightPosition() + calcDistance(distanceInch * -1);
+
         SetPIDBackward();
 
         DriveStraightBackwards();
 
-        distanceInch = distanceInch * -1;
-
-        // Get Current position in ticks
-        leftCurrentPosition = GetLeftPosition();
-
-        // Get Target position by adding current position and # of ticks to travel
-        leftTargetPosition = leftCurrentPosition + calcDistance(distanceInch);
+        IsVerbose = true;
 
         // Loop until we reach the target
-        while (leftCurrentPosition > leftTargetPosition && opModeIsActive()) {
-
-            telemetry.addData("W", "Inside While Loop...");
-
-            // Recalculate the current position
-            leftCurrentPosition = GetLeftPosition();
-
+        while (GetRightPosition() > leftTargetPosition && opModeIsActive()) {
             DriveStraightBackwards();
-
-//            telemetry.addData("LT", "Left Target  : " + leftTargetPosition);
-//            telemetry.addData("LT", "Left Current : " + leftCurrentPosition);
-//            telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
-//            telemetry.addData("1 imu heading", lastAngles.firstAngle);
-//            telemetry.addData("2 global heading", globalAngle);
-//            telemetry.addData("correction", correction);
-//            telemetry.addData("getP", pidDrive.getP());
-//            telemetry.addData("getI", pidDrive.getI());
-//            telemetry.addData("getD", pidDrive.getD());
-//            telemetry.addData("getError", pidDrive.getError());
-//            //LoadTelemetryData();
-//            telemetry.update();
+            if (IsVerbose) {
+                telemetry.addData("CL", "Current Right  : " + GetRightPosition());
+                telemetry.addData("TP", "Target Position: " + leftTargetPosition);
+                telemetry.update();
+            }
         }
+
+        IsVerbose = false;
+
         BasicMotorControl(0.0);
 
     }
+
+//
+//
+//    private void BackwardUntilAtTargetPosition(double distanceInch) {
+//        power = MIN_POWER;
+//
+//        SetPIDBackward();
+//
+//        DriveStraightBackwards();
+//
+//        distanceInch = distanceInch * -1;
+//
+//        // Get Current position in ticks
+//        leftCurrentPosition = GetLeftPosition();
+//
+//        // Get Target position by adding current position and # of ticks to travel
+//        leftTargetPosition = leftCurrentPosition + calcDistance(distanceInch);
+//
+//        // Loop until we reach the target
+//        while (leftCurrentPosition > leftTargetPosition && opModeIsActive()) {
+//
+//            telemetry.addData("W", "Inside While Loop...");
+//
+//            // Recalculate the current position
+//            leftCurrentPosition = GetLeftPosition();
+//
+//            DriveStraightBackwards();
+//
+////            telemetry.addData("LT", "Left Target  : " + leftTargetPosition);
+////            telemetry.addData("LT", "Left Current : " + leftCurrentPosition);
+////            telemetry.addData("LT", "Distance: " + calcDistance(distanceInch));
+////            telemetry.addData("1 imu heading", lastAngles.firstAngle);
+////            telemetry.addData("2 global heading", globalAngle);
+////            telemetry.addData("correction", correction);
+////            telemetry.addData("getP", pidDrive.getP());
+////            telemetry.addData("getI", pidDrive.getI());
+////            telemetry.addData("getD", pidDrive.getD());
+////            telemetry.addData("getError", pidDrive.getError());
+////            //LoadTelemetryData();
+////            telemetry.update();
+//        }
+//        BasicMotorControl(0.0);
+//
+//    }
 
     private void ForwardUntilTimerReached(int mills) {
 
@@ -993,6 +1042,8 @@ public class Auto01 extends LinearOpMode {
 
         // reset angle tracking on new heading.
         resetAngle();
+
+        sleep(100);
     }
 
     private void resetAngle() {

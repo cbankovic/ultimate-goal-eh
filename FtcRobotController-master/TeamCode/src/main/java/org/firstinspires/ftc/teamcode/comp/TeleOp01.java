@@ -31,7 +31,7 @@ public class TeleOp01 extends OpMode {
     private double PUSHER_IN = 0.4;
     private double PUSHER_OUT = 0.2;
 
-    private double OuttakeFrontPower = 0.62;
+    private double OuttakeFrontPower = 0.55;
     private double OuttakeBackPower = 1;
     private int k = 0;
     private int j = 0;

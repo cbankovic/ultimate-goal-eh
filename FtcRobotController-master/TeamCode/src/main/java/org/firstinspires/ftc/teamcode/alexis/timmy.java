@@ -2,12 +2,14 @@ package org.firstinspires.ftc.teamcode.alexis;
 
 import android.widget.Button;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+@Disabled
 @TeleOp(name = "Chickeb Nugget", group = "Testing")
 public class timmy extends OpMode {
 
