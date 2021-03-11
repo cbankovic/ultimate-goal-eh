@@ -42,7 +42,7 @@ public class Auto01 extends LinearOpMode {
     private DcMotor OuttakeFront;
     private Servo pusher;
     private double PUSHER_IN = 0.4;
-    private double PUSHER_OUT = 0;
+    private double PUSHER_OUT = 0.2;
 
     private double OuttakeFrontPower = 0.53;
     private double OuttakeBackPower = 1;
