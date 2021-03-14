@@ -4,7 +4,9 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "New TeleOp 2020", group = "Competition")
@@ -42,6 +44,10 @@ public class TeleOp01 extends OpMode {
 
     // Intake
     private DcMotor IntakeMotor;
+
+    // Voltage
+    VoltageSensor voltageSensor;
+    double voltage = 0.0;
 
     private Servo Intake;
     private double PRO_INCREMENT = 0.003;  // amount to slew servo each CYCLE_MS cycle
@@ -122,6 +128,8 @@ public class TeleOp01 extends OpMode {
         Intake = hardwareMap.get(Servo.class, "Intake");
         Intake.setPosition(position);
 
+        //voltageSensor = (VoltageSensor) hardwareMap.voltageSensor;
+
     }
 
     boolean firstClickSlow = true;
@@ -166,8 +174,10 @@ public class TeleOp01 extends OpMode {
         float two_trigger_left = gamepad2.left_trigger;
         float two_trigger_right = gamepad2.right_trigger;
 
+
         try {
 
+            // TODO: Make the intake go in reverse to spit out the ring
             // TODO: Make the intake the front of the robot for driving
             // TODO: make the robot intake go up and down via slowly
 
@@ -310,7 +320,8 @@ public class TeleOp01 extends OpMode {
 
     // TODO: Code these functions
     private void OuttakeOn() {
-        OuttakeFront.setPower(OuttakeFrontPower);
+        AdjustOuttakeSpeed();
+        //OuttakeFront.setPower(OuttakeFrontPower);
         telemetry.addData("Outtake", "ON");
     }
 
@@ -428,5 +439,56 @@ public class TeleOp01 extends OpMode {
             // Do nothing
         }
     }
+
+    double OuttakePower;
+    private void AdjustOuttakeSpeed() {
+        voltage = getBatteryVoltage();
+        telemetry.addData("Voltage", voltage);
+
+        if (voltage >= 14) {
+            OuttakePower = 0.5;
+//            SetOuttakePower(0.4);
+        } else if (voltage >= 13.8) {
+            OuttakePower = 0.52;
+//            SetOuttakePower(0.45);
+        } else if (voltage >= 13.2) {
+            OuttakePower = OuttakeFrontPower;
+//            SetOuttakePower(OuttakeFrontPower);
+        } else if (voltage >= 12.8) {
+            OuttakePower = 0.57;
+//            SetOuttakePower(0.58);
+        } else if (voltage > 0) {
+            OuttakePower = 0.58;
+//            SetOuttakePower(0.6);
+        } else {
+            OuttakePower = OuttakeFrontPower;
+//            SetOuttakePower(OuttakeFrontPower);
+        }
+        SetOuttakePower(OuttakePower);
+        telemetry.addData("OuttakePower", OuttakePower);
+    }
+
+    private void SetOuttakePower(double power) {
+        OuttakeFront.setPower(power);
+    }
+
+    // https://github.com/ftctechnh/ftc_app/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptTelemetry.java
+    // Computes the current battery voltage
+    double getBatteryVoltage() {
+        double result = Double.POSITIVE_INFINITY;
+        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+            double voltage = sensor.getVoltage();
+            if (voltage > 0) {
+                result = Math.min(result, voltage);
+            }
+        }
+        return result;
+    }
+
+//    private void getBatteryVoltage() {
+//        voltage = voltageSensor.getVoltage();
+//        telemetry.addData("Voltage", voltage);
+//        //telemetry.update();
+//    }
 
 }
