@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.IntegratingGyroscope;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -126,9 +127,10 @@ public class Auto01 extends LinearOpMode {
 
     private Boolean ShootBit = true;
     private Boolean WobbleBit = true;
-    private Boolean VisionBit = false;
+    private Boolean VisionBit = true;
     private Boolean IsVerbose = false;
 
+    Shooter shooter;
     /**************
      *** SCRIPT ***
      **************/
@@ -172,22 +174,22 @@ public class Auto01 extends LinearOpMode {
                 // Detect the ring stack and drive to the appropriate target zone
                 switch (ringLocation) {
                     case None:
-                        telemetry.addData("Rings found: ", "None");
+                        //telemetry.addData("Rings found: ", "None");
                         telemetry.update();
                         DriveToA();
                         break;
                     case Single:
-                        telemetry.addData("Rings found: ", "Single");
+                        //telemetry.addData("Rings found: ", "Single");
                         telemetry.update();
                         DriveToB();
                         break;
                     case Quad:
-                        telemetry.addData("Rings found: ", "Quad");
+                        //telemetry.addData("Rings found: ", "Quad");
                         telemetry.update();
                         DriveToC();
                         break;
                     default:
-                        telemetry.addData("Rings found: ", "NULL VALUE");
+                        //telemetry.addData("Rings found: ", "NULL VALUE");
                         // Issue with vision - we randomly select target zone B
                         // May the odds forever be in your favor
                         // We have to navigate around the stack if there is one present
@@ -202,7 +204,7 @@ public class Auto01 extends LinearOpMode {
                     ShootRing();
                     OuttakeStop();
                 } else {
-                    telemetry.addData("S", "Shooting");
+                    //telemetry.addData("S", "Shooting");
                     telemetry.update();
                     sleep(3000);
                 }
@@ -308,7 +310,8 @@ public class Auto01 extends LinearOpMode {
 
         // Straighten robot to the goal
         rotate(-30, 0.4);
-        rotate(-7, 0.4);
+//        rotate(-7, 0.4); // commented out on 2021/03/15@5:07 PM
+        rotate(-5, 0.4); // updated to 5 on 2021/03/15@5:07 PM
 
         // Drive to the shooting location
         BackwardUntilAtTargetPosition(12);
@@ -350,7 +353,7 @@ public class Auto01 extends LinearOpMode {
             BackwardUntilAtTargetPosition(5);
             moveWobbleForward(RETRACTED, "RETRACTED");
         } else {
-            telemetry.addData("W", "Placing Wobble Goal");
+            //telemetry.addData("W", "Placing Wobble Goal");
             telemetry.update();
             sleep(1000);
         }
@@ -521,6 +524,8 @@ public class Auto01 extends LinearOpMode {
             }
         }
 
+        shooter = new Shooter(hardwareMap, telemetry);
+
         telemetry.addData("Status", "Initializing camera");
         telemetry.update();
     }
@@ -542,13 +547,14 @@ public class Auto01 extends LinearOpMode {
     }
 
     public void OuttakeOn() {
-        OuttakeFront.setPower(OuttakeFrontPower);
-        telemetry.addData("Outtake", "ON");
+        AdjustOuttakeSpeed();
+//        OuttakeFront.setPower(OuttakeFrontPower);
+        //telemetry.addData("Outtake", "ON");
     }
 
     public void OuttakeStop() {
         OuttakeFront.setPower(0);
-        telemetry.addData("Outtake", "OFF");
+        //telemetry.addData("Outtake", "OFF");
     }
 
     private void ShootRing() {
@@ -594,17 +600,17 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
-                telemetry.addData("W", "Inside While Loop...");
+                //telemetry.addData("W", "Inside While Loop...");
 
                 // Recalculate the current position
                 wobbleCurrentPosition = GetWobblePosition();
 
                 odometerWobble.setPower(-WOBBLE_POWER);
 
-                telemetry.addData("W", "Moving Wobbly Boi");
-                telemetry.addData("W", "Position: " + caption);
-                telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
-                telemetry.addData("W", "Target Wobble Position: " + position);
+                //telemetry.addData("W", "Moving Wobbly Boi");
+                //telemetry.addData("W", "Position: " + caption);
+                //telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
+                //telemetry.addData("W", "Target Wobble Position: " + position);
                 //LoadTelemetryData();
                 telemetry.update();
             }
@@ -616,17 +622,17 @@ public class Auto01 extends LinearOpMode {
                     break;
                 }
 
-                telemetry.addData("W", "Inside While Loop...");
+                //telemetry.addData("W", "Inside While Loop...");
 
                 // Recalculate the current position
                 wobbleCurrentPosition = GetWobblePosition();
 
                 odometerWobble.setPower(WOBBLE_POWER);
 
-                telemetry.addData("W", "Moving Wobbly Boi");
-                telemetry.addData("W", "Position: " + caption);
-                telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
-                telemetry.addData("W", "Target Wobble Position: " + position);
+                //telemetry.addData("W", "Moving Wobbly Boi");
+                //telemetry.addData("W", "Position: " + caption);
+                //telemetry.addData("W", "Current Wobble Position: " + wobbleCurrentPosition);
+                //telemetry.addData("W", "Target Wobble Position: " + position);
 //                LoadTelemetryData();
                 telemetry.update();
             }
@@ -709,8 +715,8 @@ public class Auto01 extends LinearOpMode {
             power += correction;
         }
 
-        telemetry.addData("LT", "Power Sub    : " + (power + correction));
-        telemetry.addData("LT", "Power Add    : " + (power - correction));
+        //telemetry.addData("LT", "Power Sub    : " + (power + correction));
+        //telemetry.addData("LT", "Power Add    : " + (power - correction));
 
         WheelFrontLeft.setPower(power + correction);
         WheelFrontRight.setPower(power - correction);
@@ -725,8 +731,8 @@ public class Auto01 extends LinearOpMode {
             power -= correction;
         }
 
-        telemetry.addData("LT", "Power Sub    : " + (power + correction));
-        telemetry.addData("LT", "Power Add    : " + (power - correction));
+        //telemetry.addData("LT", "Power Sub    : " + (power + correction));
+        //telemetry.addData("LT", "Power Add    : " + (power - correction));
 
         WheelFrontLeft.setPower(power + correction);
         WheelFrontRight.setPower(power - correction);
@@ -835,8 +841,8 @@ public class Auto01 extends LinearOpMode {
         while (GetRightPosition() > leftTargetPosition && opModeIsActive()) {
             DriveStraightBackwards();
             if (IsVerbose) {
-                telemetry.addData("CL", "Current Right  : " + GetRightPosition());
-                telemetry.addData("TP", "Target Position: " + leftTargetPosition);
+                //telemetry.addData("CL", "Current Right  : " + GetRightPosition());
+                //telemetry.addData("TP", "Target Position: " + leftTargetPosition);
                 telemetry.update();
             }
         }
@@ -902,7 +908,7 @@ public class Auto01 extends LinearOpMode {
                 break;
             }
 
-            telemetry.addData("W", "Inside While Loop...");
+            //telemetry.addData("W", "Inside While Loop...");
 
             // Call BasicMotorControl with new speed
             BasicMotorControl(0.5);
@@ -930,7 +936,7 @@ public class Auto01 extends LinearOpMode {
     private void IntakeRetract() {
 
         telemetry.clear();
-        telemetry.addData("Servo", "Getting to starting position...");
+        //telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
         while (ServoLeft.getPosition() != MAX_POS) {
@@ -939,7 +945,7 @@ public class Auto01 extends LinearOpMode {
                 break;
             }
 
-            telemetry.addData("L Servo", ServoLeft.getPosition());
+            //telemetry.addData("L Servo", ServoLeft.getPosition());
 
             position += INCREMENT;
             ServoLeft.setPosition(position);
@@ -952,7 +958,7 @@ public class Auto01 extends LinearOpMode {
     private void IntakeExtend() {
 
         telemetry.clear();
-        telemetry.addData("Servo", "Getting to starting position...");
+        //telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
         while (ServoLeft.getPosition() != MIN_POS) {
@@ -961,7 +967,7 @@ public class Auto01 extends LinearOpMode {
                 break;
             }
 
-            telemetry.addData("L Servo", ServoLeft.getPosition());
+            //telemetry.addData("L Servo", ServoLeft.getPosition());
 
             // Keep stepping down until we hit the min value.
             position += INCREMENT;
@@ -1296,5 +1302,57 @@ public class Auto01 extends LinearOpMode {
         return returnRings;
 //        return null;
     }
+
+    double voltage = 0;
+    double OuttakePower;
+    private void AdjustOuttakeSpeed() {
+//        voltage = getBatteryVoltage();
+//
+//        if (voltage >= 14) {
+//            OuttakePower = 0.5;
+////            SetOuttakePower(0.4);
+//        } else if (voltage >= 13.8) {
+//            OuttakePower = 0.52;
+////            SetOuttakePower(0.45);
+//        } else if (voltage >= 13.0) {
+//            OuttakePower = 0.50;
+////            SetOuttakePower(0.45);
+//        } else if (voltage >= 12.8) {
+//            OuttakePower = OuttakeFrontPower;
+////            SetOuttakePower(OuttakeFrontPower);
+//        } else if (voltage >= 12.5) {
+//            OuttakePower = 0.57;
+////            SetOuttakePower(0.58);
+//        } else if (voltage > 0) {
+//            OuttakePower = 0.58;
+////            SetOuttakePower(0.6);
+//        } else {
+//            OuttakePower = OuttakeFrontPower;
+////            SetOuttakePower(OuttakeFrontPower);
+//        }
+//        SetOuttakePower(OuttakePower);
+
+        shooter.AdjustOuttakeSpeed();
+        SetOuttakePower(shooter.OuttakePower);
+        telemetry.addData("Voltage", voltage);
+        telemetry.addData("OuttakePower", OuttakePower);
+    }
+
+    private void SetOuttakePower(double power) {
+        OuttakeFront.setPower(power);
+    }
+
+//    // https://github.com/ftctechnh/ftc_app/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptTelemetry.java
+//    // Computes the current battery voltage
+//    double getBatteryVoltage() {
+//        double result = Double.POSITIVE_INFINITY;
+//        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+//            double voltage = sensor.getVoltage();
+//            if (voltage > 0) {
+//                result = Math.min(result, voltage);
+//            }
+//        }
+//        return result;
+//    }
 
 }

@@ -62,6 +62,8 @@ public class TeleOp01 extends OpMode {
     ElapsedTime timer = new ElapsedTime();
 
 
+    Shooter shooter;
+
     @Override
     public void init() {
 
@@ -128,6 +130,8 @@ public class TeleOp01 extends OpMode {
         Intake = hardwareMap.get(Servo.class, "Intake");
         Intake.setPosition(position);
 
+        shooter = new Shooter(hardwareMap, telemetry);
+
         //voltageSensor = (VoltageSensor) hardwareMap.voltageSensor;
 
     }
@@ -191,13 +195,13 @@ public class TeleOp01 extends OpMode {
                 firstClickReverse = true;
             }
 
-            telemetry.addData("Intake Position", position);
+            //telemetry.addData("Intake Position", position);
 
             // Tell if Reverse Mode is engaged
             if (reverseMode) {
-                telemetry.addData("REVERSE MODE", "ENGAGED");
+                //telemetry.addData("REVERSE MODE", "ENGAGED");
             } else {
-                telemetry.addData("REVERSE MODE", "DISENGAGED");
+                //telemetry.addData("REVERSE MODE", "DISENGAGED");
             }
 
 
@@ -219,9 +223,9 @@ public class TeleOp01 extends OpMode {
 
             // Tell if the intake is extended or retracted
             if (rampUp) {
-                telemetry.addData("Ramp", "EXTENDED");
+                //telemetry.addData("Ramp", "EXTENDED");
             } else {
-                telemetry.addData("Ramp", "RETRACTED");
+                //telemetry.addData("Ramp", "RETRACTED");
             }
 
 
@@ -237,17 +241,17 @@ public class TeleOp01 extends OpMode {
 
             // Tell if Slow Mode is engaged
             if (slowMode) {
-                telemetry.addData("SLOW MODE", "ENGAGED");
+                //telemetry.addData("SLOW MODE", "ENGAGED");
             } else {
-                telemetry.addData("SLOW MODE", "DISENGAGED");
+                //telemetry.addData("SLOW MODE", "DISENGAGED");
             }
 
 
             // Drive Code
             ProMotorControl(one_right_stick_y, -one_right_stick_x, -one_left_stick_x);
-            telemetry.addData("Left_ x: ", one_left_stick_x);
-            telemetry.addData("Right_x: ", one_right_stick_x);
-            telemetry.addData("Right_y: ", -one_right_stick_y);
+            //telemetry.addData("Left_ x: ", one_left_stick_x);
+            //telemetry.addData("Right_x: ", one_right_stick_x);
+            //telemetry.addData("Right_y: ", -one_right_stick_y);
 
             // Intake Code
             IntakeControl(two_trigger_left, two_trigger_right);
@@ -322,17 +326,17 @@ public class TeleOp01 extends OpMode {
     private void OuttakeOn() {
         AdjustOuttakeSpeed();
         //OuttakeFront.setPower(OuttakeFrontPower);
-        telemetry.addData("Outtake", "ON");
+        //telemetry.addData("Outtake", "ON");
     }
 
     private void OuttakeReverse() {
         OuttakeFront.setPower(-OuttakeFrontPower);
-        telemetry.addData("Outtake", "REVERSE");
+        //telemetry.addData("Outtake", "REVERSE");
     }
 
     private void OuttakeStop() {
         OuttakeFront.setPower(0);
-        telemetry.addData("Outtake", "OFF");
+        //telemetry.addData("Outtake", "OFF");
     }
 
     private void PushRing() {
@@ -348,24 +352,24 @@ public class TeleOp01 extends OpMode {
 
         if (right_stick_y < -0.2 || right_stick_y > 0.2) {
             WobbleGrabber.setPower(armPower);
-            telemetry.addData("Status: ", "ON");
+            //telemetry.addData("Status: ", "ON");
         } else {
             WobbleGrabber.setPower(0);
-            telemetry.addData("Status: ", "OFF");
+            //telemetry.addData("Status: ", "OFF");
         }
-        telemetry.addData("Wobbly Boi: ", armPower);
-        telemetry.addData("Right Stick Y: ", right_stick_y);
+        //telemetry.addData("Wobbly Boi: ", armPower);
+        //telemetry.addData("Right Stick Y: ", right_stick_y);
     }
 
     private void IntakeRetract() {
 
         telemetry.clear();
-        telemetry.addData("Servo", "Getting to starting position...");
+        //telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
         while (Intake.getPosition() != MAX_POS) {
 
-            telemetry.addData("L Servo", Intake.getPosition());
+            //telemetry.addData("L Servo", Intake.getPosition());
 
             position += INCREMENT;
             if (position >= MAX_POS) {
@@ -380,12 +384,12 @@ public class TeleOp01 extends OpMode {
     private void IntakeExtend() {
 
         telemetry.clear();
-        telemetry.addData("Servo", "Getting to starting position...");
+        //telemetry.addData("Servo", "Getting to starting position...");
         telemetry.update();
 
         while (Intake.getPosition() != MIN_POS) {
 
-            telemetry.addData("L Servo", Intake.getPosition());
+            //telemetry.addData("L Servo", Intake.getPosition());
 
             // Keep stepping down until we hit the min value.
             position -= INCREMENT;
@@ -421,14 +425,14 @@ public class TeleOp01 extends OpMode {
         if (left_trigger > 0.01) {
             // Keep stepping up until we hit the max value.
             IntakeMotor.setPower(left_trigger);
-            telemetry.addData("Intake Power", left_trigger);
+            //telemetry.addData("Intake Power", left_trigger);
         } else if (right_trigger > 0.01) {
             // Keep stepping up until we hit the max value.
             IntakeMotor.setPower(-right_trigger);
-            telemetry.addData("Intake Power", -right_trigger);
+            //telemetry.addData("Intake Power", -right_trigger);
         } else {
             IntakeMotor.setPower(0);
-            telemetry.addData("Intake Power", 0);
+            //telemetry.addData("Intake Power", 0);
         }
     }
 
@@ -442,29 +446,32 @@ public class TeleOp01 extends OpMode {
 
     double OuttakePower;
     private void AdjustOuttakeSpeed() {
-        voltage = getBatteryVoltage();
-        telemetry.addData("Voltage", voltage);
 
-        if (voltage >= 14) {
-            OuttakePower = 0.5;
-//            SetOuttakePower(0.4);
-        } else if (voltage >= 13.8) {
-            OuttakePower = 0.52;
-//            SetOuttakePower(0.45);
-        } else if (voltage >= 13.2) {
-            OuttakePower = OuttakeFrontPower;
-//            SetOuttakePower(OuttakeFrontPower);
-        } else if (voltage >= 12.8) {
-            OuttakePower = 0.57;
-//            SetOuttakePower(0.58);
-        } else if (voltage > 0) {
-            OuttakePower = 0.58;
-//            SetOuttakePower(0.6);
-        } else {
-            OuttakePower = OuttakeFrontPower;
-//            SetOuttakePower(OuttakeFrontPower);
-        }
-        SetOuttakePower(OuttakePower);
+//        voltage = getBatteryVoltage();
+//        telemetry.addData("Voltage", voltage);
+//
+//        if (voltage >= 14) {
+//            OuttakePower = 0.5;
+////            SetOuttakePower(0.4);
+//        } else if (voltage >= 13.8) {
+//            OuttakePower = 0.52;
+////            SetOuttakePower(0.45);
+//        } else if (voltage >= 13.2) {
+//            OuttakePower = OuttakeFrontPower;
+////            SetOuttakePower(OuttakeFrontPower);
+//        } else if (voltage >= 12.8) {
+//            OuttakePower = 0.57;
+////            SetOuttakePower(0.58);
+//        } else if (voltage > 0) {
+//            OuttakePower = 0.58;
+////            SetOuttakePower(0.6);
+//        } else {
+//            OuttakePower = OuttakeFrontPower;
+////            SetOuttakePower(OuttakeFrontPower);
+//        }
+////
+        shooter.AdjustOuttakeSpeed();
+        SetOuttakePower(shooter.OuttakePower);
         telemetry.addData("OuttakePower", OuttakePower);
     }
 
@@ -472,18 +479,18 @@ public class TeleOp01 extends OpMode {
         OuttakeFront.setPower(power);
     }
 
-    // https://github.com/ftctechnh/ftc_app/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptTelemetry.java
-    // Computes the current battery voltage
-    double getBatteryVoltage() {
-        double result = Double.POSITIVE_INFINITY;
-        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
-            double voltage = sensor.getVoltage();
-            if (voltage > 0) {
-                result = Math.min(result, voltage);
-            }
-        }
-        return result;
-    }
+//    // https://github.com/ftctechnh/ftc_app/blob/master/FtcRobotController/src/main/java/org/firstinspires/ftc/robotcontroller/external/samples/ConceptTelemetry.java
+//    // Computes the current battery voltage
+//    double getBatteryVoltage() {
+//        double result = Double.POSITIVE_INFINITY;
+//        for (VoltageSensor sensor : hardwareMap.voltageSensor) {
+//            double voltage = sensor.getVoltage();
+//            if (voltage > 0) {
+//                result = Math.min(result, voltage);
+//            }
+//        }
+//        return result;
+//    }
 
 //    private void getBatteryVoltage() {
 //        voltage = voltageSensor.getVoltage();
